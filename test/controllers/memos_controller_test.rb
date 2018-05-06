@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class MemosControllerTest < ActionDispatch::IntegrationTest
@@ -5,17 +7,17 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     @memo = memos(:one)
   end
 
-  test "should get index" do
+  test 'should get index' do
     get memos_url
     assert_response :success
   end
 
-  test "should get new" do
+  test 'should get new' do
     get new_memo_url
     assert_response :success
   end
 
-  test "should create memo" do
+  test 'should create memo' do
     assert_difference('Memo.count') do
       post memos_url, params: { memo: { category: @memo.category, content: @memo.content, create_from: @memo.create_from, info: @memo.info, price: @memo.price, tags: @memo.tags, user_id: @memo.user_id } }
     end
@@ -23,22 +25,22 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to memo_url(Memo.last)
   end
 
-  test "should show memo" do
+  test 'should show memo' do
     get memo_url(@memo)
     assert_response :success
   end
 
-  test "should get edit" do
+  test 'should get edit' do
     get edit_memo_url(@memo)
     assert_response :success
   end
 
-  test "should update memo" do
+  test 'should update memo' do
     patch memo_url(@memo), params: { memo: { category: @memo.category, content: @memo.content, create_from: @memo.create_from, info: @memo.info, price: @memo.price, tags: @memo.tags, user_id: @memo.user_id } }
     assert_redirected_to memo_url(@memo)
   end
 
-  test "should destroy memo" do
+  test 'should destroy memo' do
     assert_difference('Memo.count', -1) do
       delete memo_url(@memo)
     end

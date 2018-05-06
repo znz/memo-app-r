@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 class MemosController < ApplicationController
-  before_action :set_memo, only: [:show, :edit, :update, :destroy]
+  before_action :set_memo, only: %i[show edit update destroy]
 
   # GET /memos
   # GET /memos.json
@@ -9,8 +11,7 @@ class MemosController < ApplicationController
 
   # GET /memos/1
   # GET /memos/1.json
-  def show
-  end
+  def show; end
 
   # GET /memos/new
   def new
@@ -18,8 +19,7 @@ class MemosController < ApplicationController
   end
 
   # GET /memos/1/edit
-  def edit
-  end
+  def edit; end
 
   # POST /memos
   # POST /memos.json
@@ -62,13 +62,14 @@ class MemosController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_memo
-      @memo = Memo.find(params[:id])
-    end
 
-    # Never trust parameters from the scary internet, only allow the white list through.
-    def memo_params
-      params.require(:memo).permit(:info, :content, :price, :category, :tags, :user_id, :create_from)
-    end
+  # Use callbacks to share common setup or constraints between actions.
+  def set_memo
+    @memo = Memo.find(params[:id])
+  end
+
+  # Never trust parameters from the scary internet, only allow the white list through.
+  def memo_params
+    params.require(:memo).permit(:info, :content, :price, :category, :tags, :user_id, :create_from)
+  end
 end
