@@ -7,11 +7,13 @@ class CreateMemos < ActiveRecord::Migration[5.2]
       t.text :content
       t.integer :price
       t.string :category
-      t.string :tags
-      t.uuid :user_id
-      t.inet :create_from
+      t.string :tags, array: true
+      t.references :user, null: false
+      t.inet :create_from, null: :false
 
       t.timestamps
     end
+
+    add_index :memos, :tags, using: 'gin'
   end
 end

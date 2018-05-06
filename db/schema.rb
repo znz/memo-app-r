@@ -10,11 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_06_052406) do
+ActiveRecord::Schema.define(version: 2018_05_06_064745) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
+
+  create_table "memos", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "info"
+    t.text "content"
+    t.integer "price"
+    t.string "category"
+    t.string "tags", array: true
+    t.bigint "user_id", null: false
+    t.inet "create_from"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tags"], name: "index_memos_on_tags", using: :gin
+    t.index ["user_id"], name: "index_memos_on_user_id"
+  end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "email", default: "", null: false
