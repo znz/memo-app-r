@@ -70,6 +70,7 @@ end
 gem 'rails-i18n'
 
 gem 'bootstrap'
+gem 'devise'
 gem 'jquery-rails'
 gem 'kaminari'
 gem 'simple_form'
