@@ -5,6 +5,7 @@ ja:
 
     attributes:
       memo:
+        created_at: '作成日時'
         info: '情報'
         content: '内容'
         price: '価格'

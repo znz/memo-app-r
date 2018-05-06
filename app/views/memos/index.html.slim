@@ -1,33 +1,23 @@
 h1 = t(:'.title')
 
-table
+table.table
   thead
     tr
-      th Info
-      th Content
-      th Price
-      th Category
-      th Tags
-      th User
-      th Create from
-      th
-      th
+      th = sort_link @q, :created_at
+      th = sort_link @q, :content
+      th = sort_link @q, :price
+      th = sort_link @q, :category
+      th = Memo.human_attribute_name(:tags)
       th
 
   tbody
     - @memos.each do |memo|
       tr
-        td = memo.info
+        td = l(memo.created_at)
         td = memo.content
-        td = memo.price
+        td = memo.price&.to_i(:delimited)
         td = memo.category
         td = memo.tags
-        td = memo.user_id
-        td = memo.create_from
         td = link_to 'Show', memo
-        td = link_to 'Edit', edit_memo_path(memo)
-        td = link_to 'Destroy', memo, data: { confirm: 'Are you sure?' }, method: :delete
-
-br
 
 = link_to 'New Memo', new_memo_path

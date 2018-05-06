@@ -7,6 +7,10 @@ class MemosController < ApplicationController
   # GET /memos.json
   def index
     @memos = Memo.all
+    @q = @memos.ransack(params[:q])
+    @q.sorts = 'created_at desc' if @q.sorts.empty?
+    @memos = @q.result(distinct: true)
+    @memos = @memos.page(params[:page])
   end
 
   # GET /memos/1
