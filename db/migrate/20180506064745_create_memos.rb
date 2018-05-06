@@ -9,7 +9,7 @@ class CreateMemos < ActiveRecord::Migration[5.2]
       t.string :category
       t.string :tags, array: true
       t.references :user, null: false
-      t.inet :create_from, null: :false
+      t.inet :create_from, null: false
 
       t.timestamps
     end

@@ -23,7 +23,7 @@ ActiveRecord::Schema.define(version: 2018_05_06_064745) do
     t.string "category"
     t.string "tags", array: true
     t.bigint "user_id", null: false
-    t.inet "create_from"
+    t.inet "create_from", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["tags"], name: "index_memos_on_tags", using: :gin
