@@ -1,0 +1,24 @@
+ja:
+  activerecord:
+    models:
+      memo: 'メモ'
+
+    attributes:
+      memo:
+        info: '情報'
+        content: '内容'
+        price: '価格'
+        category: '分類'
+        tags: 'タグ'
+        user: 'ユーザー'
+        user_id: 'ユーザー'
+        create_from: '作成時の接続元'
+  memos:
+    edit:
+      title: 'メモ編集'
+    form:
+      new_tag: '新規タグ'
+    index:
+      title: 'メモ一覧'
+    new:
+      title: '新規メモ'
