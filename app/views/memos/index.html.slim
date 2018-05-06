@@ -15,7 +15,7 @@ table.table
       tr
         td = l(memo.created_at)
         td = memo.content
-        td = memo.price&.to_i(:delimited)
+        td = memo.price&.to_s(:delimited)
         td = memo.category
         td = memo.tags
         td = link_to 'Show', memo
