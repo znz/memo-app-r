@@ -15,6 +15,7 @@ Style/ClassAndModuleChildren:
 
 Style/Documentation:
   Exclude:
+    - 'db/**/*'
     - 'spec/**/*'
     - 'test/**/*'
     - 'app/helpers/application_helper.rb'
@@ -22,8 +23,14 @@ Style/Documentation:
     - 'app/models/application_record.rb'
     - 'config/application.rb'
 
+Metrics/AbcSize:
+  Enabled: false
+
 Metrics/LineLength:
   Max: 180
+
+Metrics/MethodLength:
+  Max: 100
 
 Rails:
   Enabled: true
