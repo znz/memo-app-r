@@ -31,6 +31,7 @@ Things you may want to cover:
   `docker-compose run --rm web rails db:create db:migrate`
 - `docker-compose up -d`
 - open `http://localhost:7379/`
+- `bundle install --without postgresql` on host if needed
 
 ## Clean up development environment
 
