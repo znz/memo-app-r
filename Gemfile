@@ -69,5 +69,7 @@ end
 
 gem 'rails-i18n'
 
+gem 'bootstrap'
+gem 'jquery-rails'
 gem 'simple_form'
 gem 'slim-rails'
