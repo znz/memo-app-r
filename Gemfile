@@ -71,5 +71,6 @@ gem 'rails-i18n'
 
 gem 'bootstrap'
 gem 'jquery-rails'
+gem 'kaminari'
 gem 'simple_form'
 gem 'slim-rails'
