@@ -69,4 +69,5 @@ end
 
 gem 'rails-i18n'
 
+gem 'simple_form'
 gem 'slim-rails'
