@@ -1,0 +1,33 @@
+h1 Listing memos
+
+table
+  thead
+    tr
+      th Info
+      th Content
+      th Price
+      th Category
+      th Tags
+      th User
+      th Create from
+      th
+      th
+      th
+
+  tbody
+    - @memos.each do |memo|
+      tr
+        td = memo.info
+        td = memo.content
+        td = memo.price
+        td = memo.category
+        td = memo.tags
+        td = memo.user_id
+        td = memo.create_from
+        td = link_to 'Show', memo
+        td = link_to 'Edit', edit_memo_path(memo)
+        td = link_to 'Destroy', memo, data: { confirm: 'Are you sure?' }, method: :delete
+
+br
+
+= link_to 'New Memo', new_memo_path

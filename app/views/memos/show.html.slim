@@ -1,0 +1,27 @@
+p#notice = notice
+
+p
+  strong Info:
+  = @memo.info
+p
+  strong Content:
+  = @memo.content
+p
+  strong Price:
+  = @memo.price
+p
+  strong Category:
+  = @memo.category
+p
+  strong Tags:
+  = @memo.tags
+p
+  strong User:
+  = @memo.user_id
+p
+  strong Create from:
+  = @memo.create_from
+
+=> link_to 'Edit', edit_memo_path(@memo)
+'|
+=< link_to 'Back', memos_path
