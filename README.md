@@ -22,3 +22,16 @@ Things you may want to cover:
 * Deployment instructions
 
 * ...
+
+## Initalize development environment
+
+- `docker-compose build web`
+- `docker-compose run --rm web bundle`
+- `docker-compose run --rm web rails db:setup` or
+  `docker-compose run --rm web rails db:create db:migrate`
+- `docker-compose up -d`
+- open `http://localhost:7379/`
+
+## Clean up development environment
+
+- `docker-compose down -v`

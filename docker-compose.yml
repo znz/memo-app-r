@@ -1,0 +1,28 @@
+---
+version: '3'
+services:
+  db:
+    image: postgres:latest
+    volumes:
+    - "db-data:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_PASSWORD: mysecretpassword
+  web:
+    build: .
+    command: bundle exec rails s -p 7379 -b 0.0.0.0
+    volumes:
+    - .:/app
+    - dot-bundle:/app/.bundle
+    - bundle-cache:/usr/local/bundle
+    tmpfs:
+    - /app/tmp/pids
+    ports:
+    - "7379:7379"
+    depends_on:
+    - db
+    environment:
+      DATABASE_URL: postgres://postgres:mysecretpassword@db:5432
+volumes:
+  db-data:
+  dot-bundle:
+  bundle-cache:
