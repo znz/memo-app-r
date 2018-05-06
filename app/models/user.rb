@@ -2,16 +2,15 @@
 
 # User information
 class User < ApplicationRecord
-  devise %i[
+  devise(*%i[
     confirmable
     database_authenticatable
     lockable
-    omniauthable
     recoverable
     registerable
-    ememberable
+    rememberable
     timeoutable
     trackable
     validatable
-  ]
+  ])
 end
