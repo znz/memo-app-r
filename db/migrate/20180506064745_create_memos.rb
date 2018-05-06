@@ -8,7 +8,7 @@ class CreateMemos < ActiveRecord::Migration[5.2]
       t.integer :price
       t.string :category
       t.string :tags, array: true
-      t.references :user, null: false
+      t.uuid :user_id, null: false, index: true
       t.inet :create_from, null: false
 
       t.timestamps

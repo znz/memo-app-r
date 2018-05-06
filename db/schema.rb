@@ -22,7 +22,7 @@ ActiveRecord::Schema.define(version: 2018_05_06_064745) do
     t.integer "price"
     t.string "category"
     t.string "tags", array: true
-    t.bigint "user_id", null: false
+    t.uuid "user_id", null: false
     t.inet "create_from", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
