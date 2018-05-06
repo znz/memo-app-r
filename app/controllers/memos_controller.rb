@@ -25,6 +25,8 @@ class MemosController < ApplicationController
   # POST /memos.json
   def create
     @memo = Memo.new(memo_params)
+    @memo.user = current_user
+    @memo.create_from = request.remote_ip
 
     respond_to do |format|
       if @memo.save
@@ -70,6 +72,6 @@ class MemosController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def memo_params
-    params.require(:memo).permit(:info, :content, :price, :category, :tags, :user_id, :create_from)
+    params.require(:memo).permit(:content, :price, :category, :tags)
   end
 end

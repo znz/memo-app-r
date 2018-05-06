@@ -3,13 +3,10 @@
   = f.error_notification message: f.object.errors[:base].to_sentence if f.object.errors[:base].present?
 
   .form-inputs
-    = f.input :info
     = f.input :content
     = f.input :price
     = f.input :category
     = f.input :tags
-    = f.input :user_id
-    = f.input :create_from
 
   .form-actions
     = f.button :submit
