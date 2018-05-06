@@ -6,7 +6,11 @@
     = f.input :content
     = f.input :price
     = f.input :category
-    = f.input :tags
+    = f.input :tags, as: :check_boxes, collection: Memo.all_tags.sort
+    .form-group.string.optional
+      label.form-control-label.string.optional
+        | New tag
+      = text_field_tag 'memo[tags][]', nil, class: 'form-control string optional'
 
   .form-actions
     = f.button :submit
