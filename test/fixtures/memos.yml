@@ -5,15 +5,15 @@ one:
   content: MyText
   price: 1
   category: MyString
-  tags: MyString
-  user_id: 
-  create_from: 
+  tags: [tag1,tag2]
+  user: one
+  create_from: '127.0.0.1'
 
 two:
   info: MyString
   content: MyText
   price: 1
   category: MyString
-  tags: MyString
-  user_id: 
-  create_from: 
+  tags: [tag2,tag3]
+  user: two
+  create_from: '::1'

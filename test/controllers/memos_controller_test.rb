@@ -3,7 +3,12 @@
 require 'test_helper'
 
 class MemosControllerTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+
   setup do
+    user = users(:one)
+    user.confirm
+    sign_in user
     @memo = memos(:one)
   end
 
@@ -22,7 +27,7 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
       post memos_url, params: { memo: { category: @memo.category, content: @memo.content, create_from: @memo.create_from, info: @memo.info, price: @memo.price, tags: @memo.tags, user_id: @memo.user_id } }
     end
 
-    assert_redirected_to memo_url(Memo.last)
+    assert_redirected_to memo_url(Memo.order(:created_at).last)
   end
 
   test 'should show memo' do
@@ -36,7 +41,7 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'should update memo' do
-    patch memo_url(@memo), params: { memo: { category: @memo.category, content: @memo.content, create_from: @memo.create_from, info: @memo.info, price: @memo.price, tags: @memo.tags, user_id: @memo.user_id } }
+    patch memo_url(@memo), params: { memo: { category: @memo.category, content: @memo.content, price: @memo.price, tags: @memo.tags } }
     assert_redirected_to memo_url(@memo)
   end
 

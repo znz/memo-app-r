@@ -3,7 +3,12 @@
 require 'application_system_test_case'
 
 class MemosTest < ApplicationSystemTestCase
+  include Devise::Test::IntegrationHelpers
+
   setup do
+    user = users(:one)
+    user.confirm
+    sign_in user
     @memo = memos(:one)
   end
 
