@@ -64,6 +64,7 @@ end
 gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
 
 group :development do
+  gem 'letter_opener_web'
   gem 'rubocop', require: false
 end
 
