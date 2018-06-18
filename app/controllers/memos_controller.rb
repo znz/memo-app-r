@@ -9,10 +9,6 @@ class MemosController < ApplicationController
   # GET /memos.json
   def index
     @memos = Memo.all
-    tags = params.dig(:q, :tags)
-    if tags.is_a?(Array)
-      @memos = @memos.where("tags @> ARRAY[?]::varchar[]", tags.map(&:to_s))
-    end
     @q = @memos.ransack(params[:q])
     @q.sorts = 'created_at desc' if @q.sorts.empty?
     @memos = @q.result(distinct: true)

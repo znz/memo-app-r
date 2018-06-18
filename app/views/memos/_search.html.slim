@@ -5,7 +5,7 @@
     = f.input :content_cont, label: @q.translate(:content_cont)
     = f.input :created_on_gteq, label: Memo.human_attribute_name(:created_on_gteq)
     = f.input :created_on_lteq, label: Memo.human_attribute_name(:created_on_lteq)
-    = f.input :tags, wrapper: :horizontal_collection_inline, include_hidden: false, as: :check_boxes, collection: Memo.all_tags.sort, label: Memo.human_attribute_name(:tags)
+    = f.input :tags_contains, wrapper: :horizontal_collection_inline, include_hidden: false, as: :check_boxes, collection: Memo.all_tags.sort, label: Memo.human_attribute_name(:tags)
 
   .form-actions
     .col-sm-9.offset-sm-3
