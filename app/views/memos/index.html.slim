@@ -19,7 +19,10 @@ table.table
         td = memo.content
         td = memo.price&.to_s(:delimited)
         td = memo.category
-        td = memo.tags
+        td
+          ul.list-unstyled
+            - memo.tags&.each do |tag|
+              li = tag
         td = link_to 'Show', memo
 
 = paginate @memos
