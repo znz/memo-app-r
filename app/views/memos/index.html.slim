@@ -10,21 +10,21 @@ table.table
   thead
     tr
       th = sort_link @q, :created_at
+      th = Memo.human_attribute_name(:tags)
       th = sort_link @q, :content
       th = sort_link @q, :price
-      th = Memo.human_attribute_name(:tags)
       th
 
   tbody
     - @memos.each do |memo|
       tr
         td = l(memo.created_at)
-        td = memo.content
-        td = memo.price&.to_s(:delimited)
         td
           ul.list-unstyled
             - memo.tags&.each do |tag|
               li = tag
+        td = memo.content
+        td = memo.price&.to_s(:delimited)
         td = link_to 'Show', memo
 
 = paginate @memos
