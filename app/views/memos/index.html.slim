@@ -1,5 +1,7 @@
 h1 = t(:'.title')
 
+= paginate @memos
+
 table.table
   thead
     tr
@@ -19,5 +21,7 @@ table.table
         td = memo.category
         td = memo.tags
         td = link_to 'Show', memo
+
+= paginate @memos
 
 = link_to 'New Memo', new_memo_path
