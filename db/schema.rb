@@ -26,6 +26,8 @@ ActiveRecord::Schema.define(version: 2018_05_06_064745) do
     t.uuid "user_id", null: false
     t.inet "create_from", null: false
     t.geography "lonlat", limit: {:srid=>4326, :type=>"st_point", :geographic=>true}
+    t.string "hostname"
+    t.string "user_agent"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["lonlat"], name: "index_memos_on_lonlat", using: :gist

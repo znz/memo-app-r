@@ -11,6 +11,8 @@ class CreateMemos < ActiveRecord::Migration[5.2]
       t.uuid :user_id, null: false, index: true
       t.inet :create_from, null: false
       t.st_point :lonlat, geographic: true
+      t.string :hostname
+      t.string :user_agent
 
       t.timestamps
     end
