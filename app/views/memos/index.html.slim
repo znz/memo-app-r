@@ -25,7 +25,10 @@ table.table
               li = tag
         td = memo.content
         td = memo.price&.to_s(:delimited)
-        td = link_to 'Show', memo
+        td
+          = link_to 'Show', memo
+          '
+          = link_to 'Edit', edit_memo_path(memo)
 
 = paginate @memos
 
