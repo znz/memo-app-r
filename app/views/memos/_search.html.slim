@@ -1,0 +1,11 @@
+= search_form_for @q, wrapper: :horizontal_form do|f|
+  = f.error_notification
+
+  .form-inputs
+    = f.input :content_cont, label: @q.translate(:content_cont)
+    = f.input :created_on_gteq, label: Memo.human_attribute_name(:created_on_gteq)
+    = f.input :created_on_lteq, label: Memo.human_attribute_name(:created_on_lteq)
+
+  .form-actions
+    .col-sm-9.offset-sm-3
+      = f.button :submit, class: 'btn btn-primary'

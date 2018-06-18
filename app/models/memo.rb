@@ -18,4 +18,6 @@ class Memo < ApplicationRecord
     end
   end
   before_validation :unique_tags
+
+  include RansackerCreatedOn
 end

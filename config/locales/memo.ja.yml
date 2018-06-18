@@ -17,6 +17,10 @@ ja:
         hostname: '作成時のホスト名'
         user_agent: '作成時のユーザーエージェント'
         lonlat: '作成時の位置情報'
+        created_on: '作成日'
+        created_on_gteq: '作成日は以下以降'
+        created_on_lteq: '作成日は以下以前'
+
   memos:
     edit:
       title: 'メモ編集'
