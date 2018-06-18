@@ -5,8 +5,6 @@ dl.row
   dd.col-sm-9 = @memo.content
   dt.col-sm-3 = Memo.human_attribute_name(:price)
   dd.col-sm-9 = @memo.price&.to_s(:delimited)
-  dt.col-sm-3 = Memo.human_attribute_name(:category)
-  dd.col-sm-9 = @memo.category
   dt.col-sm-3 = Memo.human_attribute_name(:tags)
   dd.col-sm-9
     ul.list-unstyled

@@ -6,7 +6,6 @@ class CreateMemos < ActiveRecord::Migration[5.2]
       t.string :info
       t.text :content
       t.integer :price
-      t.string :category
       t.string :tags, array: true
       t.uuid :user_id, null: false, index: true
       t.inet :create_from, null: false

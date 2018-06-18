@@ -6,7 +6,6 @@
     = f.hidden_field :info
     = f.input :content
     = f.input :price
-    = f.input :category
     = f.input :tags, as: :check_boxes, collection: Memo.all_tags.sort
     = f.hidden_field :lonlat
     .form-group.string.optional

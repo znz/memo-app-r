@@ -21,7 +21,6 @@ ActiveRecord::Schema.define(version: 2018_05_06_064745) do
     t.string "info"
     t.text "content"
     t.integer "price"
-    t.string "category"
     t.string "tags", array: true
     t.uuid "user_id", null: false
     t.inet "create_from", null: false
