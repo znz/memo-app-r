@@ -2,7 +2,7 @@
 version: '3'
 services:
   db:
-    image: postgres:latest
+    image: mdillon/postgis:10-alpine
     volumes:
     - "db-data:/var/lib/postgresql/data"
     environment:
@@ -21,7 +21,7 @@ services:
     depends_on:
     - db
     environment:
-      DATABASE_URL: postgres://postgres:mysecretpassword@db:5432
+      DATABASE_URL: postgis://postgres:mysecretpassword@db:5432
 volumes:
   db-data:
   dot-bundle:
