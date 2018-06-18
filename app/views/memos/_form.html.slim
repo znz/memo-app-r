@@ -3,10 +3,12 @@
   = f.error_notification message: f.object.errors[:base].to_sentence if f.object.errors[:base].present?
 
   .form-inputs
+    = f.hidden_field :info
     = f.input :content
     = f.input :price
     = f.input :category
     = f.input :tags, as: :check_boxes, collection: Memo.all_tags.sort
+    = f.hidden_field :lonlat
     .form-group.string.optional
       label.form-control-label.string.optional
         = t(:'.new_tag')
@@ -14,3 +16,5 @@
 
   .form-actions
     = f.button :submit
+
+  #debug
