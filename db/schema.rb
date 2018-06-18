@@ -15,6 +15,7 @@ ActiveRecord::Schema.define(version: 2018_05_06_064745) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
+  enable_extension "postgis"
 
   create_table "memos", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "info"
@@ -24,8 +25,10 @@ ActiveRecord::Schema.define(version: 2018_05_06_064745) do
     t.string "tags", array: true
     t.uuid "user_id", null: false
     t.inet "create_from", null: false
+    t.geography "lonlat", limit: {:srid=>4326, :type=>"st_point", :geographic=>true}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["lonlat"], name: "index_memos_on_lonlat", using: :gist
     t.index ["tags"], name: "index_memos_on_tags", using: :gin
     t.index ["user_id"], name: "index_memos_on_user_id"
   end
