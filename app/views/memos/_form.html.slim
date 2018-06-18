@@ -6,7 +6,7 @@
     = f.hidden_field :info
     = f.input :content
     = f.input :price
-    = f.input :tags, as: :check_boxes, collection: Memo.all_tags.sort
+    = f.input :tags, as: :check_boxes, collection: Memo.all_tags.sort, wrapper: :vertical_collection_inline
     = f.hidden_field :lonlat
     .form-group.string.optional
       label.form-control-label.string.optional
@@ -14,6 +14,6 @@
       = text_field_tag 'memo[tags][]', nil, class: 'form-control string optional'
 
   .form-actions
-    = f.button :submit
+    = f.button :submit, class: 'btn btn-primary'
 
   #debug
