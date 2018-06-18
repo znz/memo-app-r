@@ -14,6 +14,9 @@ ja:
         user: 'ユーザー'
         user_id: 'ユーザー'
         create_from: '作成時の接続元'
+        hostname: '作成時のホスト名'
+        user_agent: '作成時のユーザーエージェント'
+        lonlat: '作成時の位置情報'
   memos:
     edit:
       title: 'メモ編集'

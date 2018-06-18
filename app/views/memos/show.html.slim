@@ -1,35 +1,27 @@
-p#notice = notice
-
-p
-  strong Info:
-  = @memo.info
-p
-  strong Content:
-  = @memo.content
-p
-  strong Price:
-  = @memo.price
-p
-  strong Category:
-  = @memo.category
-p
-  strong Tags:
-  = @memo.tags
-p
-  strong User:
-  = @memo.user_id
-p
-  strong Create from:
-  = @memo.create_from
-p
-  strong Hostname:
-  = @memo.hostname
-p
-  strong User-Agent:
-  = @memo.user_agent
-p
-  strong Lonlat:
-  = @memo.lonlat
+dl.row
+  dt.col-sm-3 = Memo.human_attribute_name(:info)
+  dd.col-sm-9 = @memo.info
+  dt.col-sm-3 = Memo.human_attribute_name(:content)
+  dd.col-sm-9 = @memo.content
+  dt.col-sm-3 = Memo.human_attribute_name(:price)
+  dd.col-sm-9 = @memo.price&.to_s(:delimited)
+  dt.col-sm-3 = Memo.human_attribute_name(:category)
+  dd.col-sm-9 = @memo.category
+  dt.col-sm-3 = Memo.human_attribute_name(:tags)
+  dd.col-sm-9
+    ul.list-unstyled
+      - @memo.tags&.each do |tag|
+        li = tag
+  dt.col-sm-3 = Memo.human_attribute_name(:user_id)
+  dd.col-sm-9 = @memo.user&.email
+  dt.col-sm-3 = Memo.human_attribute_name(:create_from)
+  dd.col-sm-9 = @memo.create_from
+  dt.col-sm-3 = Memo.human_attribute_name(:hostname)
+  dd.col-sm-9 = @memo.hostname
+  dt.col-sm-3 = Memo.human_attribute_name(:user_agent)
+  dd.col-sm-9 = @memo.user_agent
+  dt.col-sm-3 = Memo.human_attribute_name(:lonlat)
+  dd.col-sm-9 = @memo.lonlat
 
 => link_to 'Edit', edit_memo_path(@memo)
 '|
