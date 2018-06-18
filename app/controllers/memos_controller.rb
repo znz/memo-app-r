@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'resolv'
+
 class MemosController < ApplicationController
   before_action :set_memo, only: %i[show edit update destroy]
 
@@ -30,7 +32,14 @@ class MemosController < ApplicationController
   def create
     @memo = Memo.new(memo_params)
     @memo.user = current_user
-    @memo.create_from = request.remote_ip
+    ip = request.remote_ip
+    @memo.create_from = ip
+    begin
+      @memo.hostname = Resolv.getname(ip)
+    rescue Resolv::ResolvError
+      # ignore
+    end
+    @memo.user_agent = request.env['HTTP_USER_AGENT']
 
     respond_to do |format|
       if @memo.save
