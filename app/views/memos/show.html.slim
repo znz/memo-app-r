@@ -2,7 +2,7 @@ dl.row
   dt.col-sm-3 = Memo.human_attribute_name(:created_at)
   dd.col-sm-9 = l(@memo.created_at, format: :long)
   dt.col-sm-3 = Memo.human_attribute_name(:info)
-  dd.col-sm-9 = @memo.info
+  dd.col-sm-9 = @memo.info&.gsub(/,/, ', ')
   dt.col-sm-3 = Memo.human_attribute_name(:content)
   dd.col-sm-9 = @memo.content
   dt.col-sm-3 = Memo.human_attribute_name(:price)
