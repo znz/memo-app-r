@@ -1,5 +1,6 @@
 ja:
   nav:
     site_name: 'Memo App R'
-    home: 'ホーム'
+    home: 'メモ一覧'
+    new_memo: '新規メモ'
     about: 'このサイトについて'
