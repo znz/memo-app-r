@@ -1,5 +1,8 @@
 h1 = t(:'.title')
 
+- if Rails.env.development?
+  = debug request.remote_ip
+
 == render 'form'
 
 = link_to 'Back', memos_path
