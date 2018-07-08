@@ -1,7 +1,9 @@
 h1 = t(:'.title')
 
 - if Rails.env.development?
-  = debug request.remote_ip
+  - ip = request.remote_ip
+  - hostname =  begin; Resolv.getname(ip); rescue Resolv::ResolvError; end
+  = debug [ip, hostname]
 
 == render 'form'
 
