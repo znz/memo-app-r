@@ -1,0 +1,13 @@
+language: ruby
+
+addons:
+  postgresql: "9.6"
+
+env:
+  - DATABASE_URL=postgres://postgres@localhost/travis_ci_test
+
+cache: bundler
+
+script:
+- bundle exec rails db:setup
+- bundle exec rails test
