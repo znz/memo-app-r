@@ -2,6 +2,9 @@ language: ruby
 
 addons:
   postgresql: "9.6"
+  apt:
+    packages:
+    - postgresql-9.6-postgis-2.3
 
 env:
   - DATABASE_URL=postgres://postgres@localhost/travis_ci_test
