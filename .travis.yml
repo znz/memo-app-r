@@ -1,16 +1,14 @@
 language: ruby
 
+sudo: required
+dist: xenial
 addons:
-  postgresql: "10"
+  postgresql: 10
   apt:
     packages:
-    - postgresql-10
-    - postgresql-client-10
     - postgresql-10-postgis-2.4
 
 env:
-  global:
-  - PGPORT=5433
   - DATABASE_URL=postgis://postgres@localhost:5433/travis_ci_test
 
 cache: bundler
