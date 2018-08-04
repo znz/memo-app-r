@@ -11,7 +11,7 @@ class MemosController < ApplicationController
     @memos = Memo.all
     @q = @memos.ransack(params[:q])
     @q.sorts = 'created_at desc' if @q.sorts.empty?
-    @memos = @q.result(distinct: true)
+    @memos = @q.result
     @memos_without_pagination = @memos
     @memos = @memos.page(params[:page])
   end
