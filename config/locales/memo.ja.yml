@@ -28,5 +28,6 @@ ja:
       new_tag: '新規タグ'
     index:
       title: 'メモ一覧'
+      total: '合計: '
     new:
       title: '新規メモ'
