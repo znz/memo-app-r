@@ -9,7 +9,7 @@ addons:
     - postgresql-10-postgis-2.4
 
 env:
-  - DATABASE_URL=postgis://postgres@localhost:5433/travis_ci_test
+  - DATABASE_URL=postgis://postgres@localhost:5432/travis_ci_test
 
 cache: bundler
 
