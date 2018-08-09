@@ -307,7 +307,7 @@ DEPENDENCIES
   pg (>= 0.18, < 2.0)
   puma (~> 3.11)
   pundit
-  rails (~> 5.2.0)
+  rails (~> 5.2.1)
   rails-i18n
   ransack
   rubocop
