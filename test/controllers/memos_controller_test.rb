@@ -17,6 +17,11 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test 'should get index with q' do
+    get memos_url(q: { content_cont: 'test' })
+    assert_response :success
+  end
+
   test 'should get new' do
     get new_memo_url
     assert_response :success

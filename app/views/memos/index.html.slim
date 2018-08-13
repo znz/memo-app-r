@@ -6,9 +6,10 @@ p.page_entries_info= page_entries_info @memos
 
 = paginate @memos
 
-p.total
-  = t(:'.total')
-  = @memos_without_pagination.sum(:price).to_s(:delimited)
+- if params.dig(:q)
+  p.total
+    = t(:'.total')
+    = @memos_without_pagination.sum(:price).to_s(:delimited)
 
 table.table
   thead
