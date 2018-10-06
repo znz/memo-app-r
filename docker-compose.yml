@@ -8,7 +8,9 @@ services:
     environment:
       POSTGRES_PASSWORD: mysecretpassword
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.local
     command: bundle exec rails s -p 7379 -b 0.0.0.0
     volumes:
     - .:/app
