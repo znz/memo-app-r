@@ -86,7 +86,7 @@ GEM
       coffee-script-source
       execjs
     coffee-script-source (1.12.2)
-    concurrent-ruby (1.0.5)
+    concurrent-ruby (1.1.1)
     crass (1.0.4)
     devise (4.5.0)
       bcrypt (~> 3.0)
@@ -105,7 +105,7 @@ GEM
       concurrent-ruby (~> 1.0)
     io-like (0.3.0)
     jaro_winkler (1.5.1)
-    jbuilder (2.7.0)
+    jbuilder (2.8.0)
       activesupport (>= 4.2.0)
       multi_json (>= 1.2)
     jquery-rails (4.3.3)
@@ -298,7 +298,7 @@ DEPENDENCIES
   coffee-rails (~> 4.2)
   devise
   devise-i18n
-  jbuilder (~> 2.5)
+  jbuilder (~> 2.8)
   jquery-rails
   kaminari
   letter_opener_web
