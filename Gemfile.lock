@@ -94,7 +94,7 @@ GEM
       railties (>= 4.1.0, < 6.0)
       responders
       warden (~> 1.2.3)
-    devise-i18n (1.7.1)
+    devise-i18n (1.7.2)
       devise (>= 4.5)
     erubi (1.8.0)
     execjs (2.7.0)
@@ -212,7 +212,7 @@ GEM
     rgeo-activerecord (6.1.0)
       activerecord (~> 5.0)
       rgeo (>= 1.0.0)
-    rubocop (0.63.1)
+    rubocop (0.64.0)
       jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)
       parser (>= 2.5, != 2.5.1.1)
