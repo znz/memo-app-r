@@ -82,3 +82,5 @@ gem 'simple_form'
 gem 'slim-rails'
 
 gem 'acts-as-taggable-array-on'
+
+gem 'rollbar'
