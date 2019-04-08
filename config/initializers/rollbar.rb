@@ -38,7 +38,7 @@ Rollbar.configure do |config|
 
   config.exception_level_filters.merge!('ActionController::RoutingError' => lambda { |e|
     level = 'warning'
-    if %r[\ANo route matches \[^(?<method>.+?)\] (?<path>.+)] =~ e.to_s
+    if %r[\ANo route matches \[(?<method>.+?)\] (?<path>.+)\z] =~ e.to_s
       case path
       when '/'
         level = 'ignore'
