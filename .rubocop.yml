@@ -32,5 +32,15 @@ Metrics/LineLength:
 Metrics/MethodLength:
   Max: 100
 
+Performance/RedundantMerge:
+  Exclude:
+    - config/initializers/rollbar.rb
+
 Rails:
   Enabled: true
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/Lambda:
+  Enabled: false
