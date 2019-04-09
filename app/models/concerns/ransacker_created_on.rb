@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Add created_on for ransack
 module RansackerCreatedOn
   extend ActiveSupport::Concern
 

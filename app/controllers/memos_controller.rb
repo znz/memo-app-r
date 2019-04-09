@@ -37,7 +37,7 @@ class MemosController < ApplicationController
     @memo.create_from = ip
     begin
       @memo.hostname = Resolv.getname(ip)
-    rescue Resolv::ResolvError
+    rescue Resolv::ResolvError # rubocop:disable Lint/HandleExceptions
       # ignore
     end
     @memo.user_agent = request.env['HTTP_USER_AGENT']

@@ -18,9 +18,8 @@ Style/Documentation:
     - 'db/**/*'
     - 'spec/**/*'
     - 'test/**/*'
-    - 'app/helpers/application_helper.rb'
-    - 'app/mailers/application_mailer.rb'
-    - 'app/models/application_record.rb'
+    - 'app/*/application_*.rb'
+    - 'app/controllers/*.rb'
     - 'config/application.rb'
 
 Metrics/AbcSize:
@@ -38,6 +37,12 @@ Performance/RedundantMerge:
 
 Rails:
   Enabled: true
+
+Style/AccessModifierDeclarations:
+  Enabled: false
+
+Style/GuardClause:
+  Enabled: false
 
 Style/IfUnlessModifier:
   Enabled: false
