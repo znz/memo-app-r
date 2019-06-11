@@ -4,7 +4,7 @@ services:
   db:
     image: mdillon/postgis:10-alpine
     volumes:
-    - "db-data:/var/lib/postgresql/data"
+    - db-data:/var/lib/postgresql/data:cached
     environment:
       POSTGRES_PASSWORD: mysecretpassword
   web:
@@ -13,9 +13,13 @@ services:
       dockerfile: Dockerfile.local
     command: bundle exec rails s -p 7379 -b 0.0.0.0
     volumes:
-    - .:/app
+    - .:/app:cached
     - dot-bundle:/app/.bundle
     - bundle-cache:/usr/local/bundle
+    # exclude
+    - /app/tmp
+    - /app/log
+    - /app/.git
     tmpfs:
     - /app/tmp/pids
     ports:
