@@ -86,3 +86,4 @@ gem 'slim-rails'
 gem 'acts-as-taggable-array-on'
 
 gem 'rollbar'
+gem 'rack-attack'
