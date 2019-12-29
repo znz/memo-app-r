@@ -29,7 +29,7 @@ Style/Documentation:
 Metrics/AbcSize:
   Enabled: false
 
-Metrics/LineLength:
+Layout/LineLength:
   Max: 180
 
 Metrics/MethodLength:
