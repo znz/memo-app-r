@@ -23,6 +23,6 @@ dl.row
   dt.col-sm-3 = Memo.human_attribute_name(:lonlat)
   dd.col-sm-9 = @memo.lonlat
 
-=> link_to 'Edit', edit_memo_path(@memo)
+=> link_to 'Edit', edit_memo_path(@memo), accesskey: 'E'
 '|
-=< link_to 'Back', memos_path
+=< link_to 'Back', memos_path, accesskey: 'B'

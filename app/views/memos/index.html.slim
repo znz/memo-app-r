@@ -21,7 +21,7 @@ table.table
       th
 
   tbody
-    - @memos.each do |memo|
+    - @memos.each_with_index do |memo, idx|
       tr
         td = l(memo.created_at)
         td
@@ -31,10 +31,11 @@ table.table
         td = memo.content
         td = memo.price&.to_s(:delimited)
         td
-          = link_to 'Show', memo
+          = link_to 'Show', memo, accesskey: (idx.zero? ? 'S' : nil)
           '
-          = link_to 'Edit', edit_memo_path(memo)
+          = link_to 'Edit', edit_memo_path(memo), accesskey: (idx.zero? ? 'E' : nil)
+      - accesskey = false
 
 = paginate @memos
 
-= link_to 'New Memo', new_memo_path
+= link_to 'New Memo', new_memo_path, accesskey: 'N'
