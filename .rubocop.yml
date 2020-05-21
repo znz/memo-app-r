@@ -73,3 +73,5 @@ Style/ExponentialNotation:
   Enabled: true
 Style/SlicingWithRange:
   Enabled: true
+Lint/DeprecatedOpenSSLConstant:
+  Enabled: true
