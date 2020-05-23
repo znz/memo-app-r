@@ -1,4 +1,4 @@
-= search_form_for @q, wrapper: :horizontal_form do |f|
+= search_form_for @q, wrapper: :horizontal_form, html: { class: 'collapse' } do |f|
   = f.error_notification
 
   .form-inputs
@@ -10,3 +10,6 @@
   .form-actions
     .col-sm-9.offset-sm-3
       = f.button :submit, class: 'btn btn-primary'
+
+button.float-right.btn.btn-sm.btn-outline-primary type="button" data-toggle="collapse" data-target="#memo_search" aria-expanded="false" aria-controls="memo_search"
+  | Show search form
