@@ -2,7 +2,7 @@
   = f.error_notification
 
   .form-inputs
-    = f.input :content_cont, label: @q.translate(:content_cont), input_html: { class: 'arib-font' }
+    = f.input :content_cont, label: @q.translate(:content_cont), input_html: { class: 'arib-font', accesskey: 'C' }
     = f.input :created_on_gteq, label: Memo.human_attribute_name(:created_on_gteq)
     = f.input :created_on_lteq, label: Memo.human_attribute_name(:created_on_lteq)
     = f.input :tags_contains, wrapper: :horizontal_collection_inline, include_hidden: false, as: :check_boxes, collection: Memo.all_tags.sort, label: Memo.human_attribute_name(:tags)
@@ -11,5 +11,5 @@
     .col-sm-9.offset-sm-3
       = f.button :submit, class: 'btn btn-primary'
 
-button.float-right.btn.btn-sm.btn-outline-primary type="button" data-toggle="collapse" data-target="#memo_search" aria-expanded="false" aria-controls="memo_search"
+button.float-right.btn.btn-sm.btn-outline-primary type="button" data-toggle="collapse" data-target="#memo_search" aria-expanded="false" aria-controls="memo_search" accesskey="F"
   | Show search form
