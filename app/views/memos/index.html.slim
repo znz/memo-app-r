@@ -28,7 +28,7 @@ table.table
           ul.list-unstyled
             - memo.tags&.each do |tag|
               li = tag
-        td = memo.content
+        td.arib-font = memo.content
         td = memo.price&.to_s(:delimited)
         td
           = link_to 'Show', memo, accesskey: (idx.zero? ? 'S' : nil)
