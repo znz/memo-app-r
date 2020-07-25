@@ -206,7 +206,7 @@ GEM
     rgeo-activerecord (6.2.1)
       activerecord (>= 5.0)
       rgeo (>= 1.0.0)
-    rollbar (2.26.1)
+    rollbar (2.27.0)
     rubocop (0.88.0)
       parallel (~> 1.10)
       parser (>= 2.7.1.1)
