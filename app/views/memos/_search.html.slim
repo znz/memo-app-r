@@ -2,9 +2,9 @@
   = f.error_notification
 
   .form-inputs
-    = f.input :content_cont, label: @q.translate(:content_cont), input_html: { class: 'arib-font', accesskey: 'C' }
-    = f.input :created_on_gteq, label: Memo.human_attribute_name(:created_on_gteq)
-    = f.input :created_on_lteq, label: Memo.human_attribute_name(:created_on_lteq)
+    = f.input :content_cont, as: :text, label: @q.translate(:content_cont), input_html: { class: 'arib-font', accesskey: 'C' }
+    = f.input :created_on_gteq, label: Memo.human_attribute_name(:created_on_gteq), input_html: { type: 'date' }
+    = f.input :created_on_lteq, label: Memo.human_attribute_name(:created_on_lteq), input_html: { type: 'date' }
     = f.input :tags_contains, wrapper: :horizontal_collection_inline, include_hidden: false, as: :check_boxes, collection: Memo.all_tags.sort, label: Memo.human_attribute_name(:tags)
 
   .form-actions
