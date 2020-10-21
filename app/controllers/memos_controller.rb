@@ -18,7 +18,8 @@ class MemosController < ApplicationController
 
   # GET /memos/1
   # GET /memos/1.json
-  def show; end
+  def show
+  end
 
   # GET /memos/new
   def new
@@ -26,7 +27,8 @@ class MemosController < ApplicationController
   end
 
   # GET /memos/1/edit
-  def edit; end
+  def edit
+  end
 
   # POST /memos
   # POST /memos.json
