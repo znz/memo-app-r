@@ -38,7 +38,7 @@ Rollbar.configure do |config|
   # You can also specify a callable, which will be called with the exception instance.
   # config.exception_level_filters.merge!('MyCriticalException' => lambda { |e| 'critical' })
 
-  config.exception_level_filters.merge!("ActionController::RoutingError" => lambda { |e|
+  config.exception_level_filters["ActionController::RoutingError"] = lambda { |e|
     level = "warning" # same as default
     if /\ANo route matches \[(?<method>.+?)\] "(?<path>.+)"\z/ =~ e.message
       case path
@@ -47,7 +47,7 @@ Rollbar.configure do |config|
       end
     end
     level
-  })
+  }
 
   # Enable asynchronous reporting (uses girl_friday or Threading if girl_friday
   # is not installed)
