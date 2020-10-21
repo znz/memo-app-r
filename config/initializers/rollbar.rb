@@ -4,7 +4,7 @@ Rollbar.configure do |config|
   # Without configuration, Rollbar is enabled in all environments.
   # To disable in specific environments, set config.enabled=false.
 
-  config.access_token = ENV['ROLLBAR_ACCESS_TOKEN']
+  config.access_token = ENV["ROLLBAR_ACCESS_TOKEN"]
 
   # Here we'll disable in 'test':
   if Rails.env.test?
@@ -38,12 +38,12 @@ Rollbar.configure do |config|
   # You can also specify a callable, which will be called with the exception instance.
   # config.exception_level_filters.merge!('MyCriticalException' => lambda { |e| 'critical' })
 
-  config.exception_level_filters.merge!('ActionController::RoutingError' => lambda { |e|
-    level = 'warning' # same as default
+  config.exception_level_filters.merge!("ActionController::RoutingError" => lambda { |e|
+    level = "warning" # same as default
     if /\ANo route matches \[(?<method>.+?)\] "(?<path>.+)"\z/ =~ e.message
       case path
-      when '/'
-        level = 'ignore' if method != 'GET'
+      when "/"
+        level = "ignore" if method != "GET"
       end
     end
     level
@@ -82,5 +82,5 @@ Rollbar.configure do |config|
   # environment variable like this: `ROLLBAR_ENV=staging`. This is a recommended
   # setup for Heroku. See:
   # https://devcenter.heroku.com/articles/deploying-to-a-custom-rails-environment
-  config.environment = ENV['ROLLBAR_ENV'].presence || Rails.env
+  config.environment = ENV["ROLLBAR_ENV"].presence || Rails.env
 end

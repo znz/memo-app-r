@@ -16,7 +16,7 @@ class CreateMemos < ActiveRecord::Migration[5.2]
       t.timestamps
     end
 
-    add_index :memos, :tags, using: 'gin'
-    add_index :memos, :lonlat, using: 'gist'
+    add_index :memos, :tags, using: "gin"
+    add_index :memos, :lonlat, using: "gist"
   end
 end

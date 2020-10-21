@@ -20,7 +20,7 @@ class Memo < ApplicationRecord
   before_validation :unique_tags
 
   scope :tags_contains, ->(*values) {
-    where('tags @> ARRAY[?]::varchar[]', values&.map(&:to_s))
+    where("tags @> ARRAY[?]::varchar[]", values&.map(&:to_s))
   }
 
   def self.ransackable_scopes(_auth_object = nil)

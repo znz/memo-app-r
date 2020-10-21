@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'test_helper'
+require "test_helper"
 
 class PagesControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
@@ -11,7 +11,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     sign_in user
   end
 
-  test 'should get about' do
+  test "should get about" do
     get about_url
     assert_response :success
   end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'resolv'
+require "resolv"
 
 class MemosController < ApplicationController
   before_action :set_memo, only: %i[show edit update destroy]
@@ -10,7 +10,7 @@ class MemosController < ApplicationController
   def index
     @memos = Memo.all
     @q = @memos.ransack(params[:q])
-    @q.sorts = 'created_at desc' if @q.sorts.empty?
+    @q.sorts = "created_at desc" if @q.sorts.empty?
     @memos = @q.result
     @memos_without_pagination = @memos
     @memos = @memos.page(params[:page])
@@ -40,11 +40,11 @@ class MemosController < ApplicationController
     rescue Resolv::ResolvError
       # ignore
     end
-    @memo.user_agent = request.env['HTTP_USER_AGENT']
+    @memo.user_agent = request.env["HTTP_USER_AGENT"]
 
     respond_to do |format|
       if @memo.save
-        format.html { redirect_to @memo, notice: 'Memo was successfully created.' }
+        format.html { redirect_to @memo, notice: "Memo was successfully created." }
         format.json { render :show, status: :created, location: @memo }
       else
         format.html { render :new }
@@ -58,7 +58,7 @@ class MemosController < ApplicationController
   def update
     respond_to do |format|
       if @memo.update(memo_params)
-        format.html { redirect_to @memo, notice: 'Memo was successfully updated.' }
+        format.html { redirect_to @memo, notice: "Memo was successfully updated." }
         format.json { render :show, status: :ok, location: @memo }
       else
         format.html { render :edit }
@@ -72,7 +72,7 @@ class MemosController < ApplicationController
   def destroy
     @memo.destroy
     respond_to do |format|
-      format.html { redirect_to memos_url, notice: 'Memo was successfully destroyed.' }
+      format.html { redirect_to memos_url, notice: "Memo was successfully destroyed." }
       format.json { head :no_content }
     end
   end

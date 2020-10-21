@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative 'boot'
-ENV['RANSACK_FORM_BUILDER'] = '::SimpleForm::FormBuilder'
-require 'rails/all'
+require_relative "boot"
+ENV["RANSACK_FORM_BUILDER"] = "::SimpleForm::FormBuilder"
+require "rails/all"
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
@@ -18,6 +18,6 @@ module MemoAppR
     # -- all .rb files in that directory are automatically loaded after loading
     # the framework and any gems in your application.
 
-    config.time_zone = 'Asia/Tokyo'
+    config.time_zone = "Asia/Tokyo"
   end
 end
