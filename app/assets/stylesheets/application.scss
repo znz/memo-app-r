@@ -21,7 +21,7 @@
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji",'ヒラギノ角ゴ ProN W3','Hiragino Kaku Gothic ProN','Hiragino Sans GB','.HeitiUI GB18030PUA','游ゴシック体','YuGothic','游ゴシック','Yu Gothic','Apple Symbols','Apple カラー絵文字','Apple Color Emoji','Noto Sans Symbols','源真ゴシック Regular','源ノ角ゴシック Normal','源ノ角ゴシック JP Normal','メイリオ','Windows TV ゴシック','Segoe UI Symbol','Segoe UI Emoji','VL ゴシック','文泉驿正黑','花園明朝A','HanaMinA','YOzFont','Quivira','Symbola','DejaVu Sans','BabelStone Han','BabelStone Modern','和田研中丸ゴシック2004絵文字','WadaLabChuMaruGo2004Emoji','和田研中丸ゴシック2004ARIB','WadaLabChuMaruGo2004ARIB','和田研細丸ゴシック2004絵文字','WadaLabMaruGo2004Emoji','和田研細丸ゴシック2004ARIB','WadaLabMaruGo2004ARIB','Nishiki-teki','Code2000','FreeSans','FreeMono','FreeSerif';
 }
 
-.memo_tags {
+.memo_tags, .q_tags_contains {
   .form-check-inline:nth-child(3n) label {
     background-color: #dff;
   }
