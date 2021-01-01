@@ -13,13 +13,11 @@ services:
       dockerfile: Dockerfile.local
     command: bundle exec rails s -p 7379 -b 0.0.0.0
     volumes:
-    - .:/app:cached
+    - code:/app:cached
     - dot-bundle:/app/.bundle
     - bundle-cache:/usr/local/bundle
     # exclude
     - /app/tmp
-    - /app/log
-    - /app/.git
     tmpfs:
     - /app/tmp/pids
     ports:
@@ -32,3 +30,22 @@ volumes:
   db-data:
   dot-bundle:
   bundle-cache:
+  code:
+
+x-mutagen:
+  sync:
+    defaults:
+      ignore:
+        vcs: true
+    code:
+      alpha: "./"
+      beta: "volume://code"
+      mode: two-way-resolved
+      ignore:
+        paths:
+        - "log/*"
+        - "tmp/*"
+    log:
+      alpha: "volume://code/log"
+      beta: "./log/"
+      mode: two-way-resolved
