@@ -20,6 +20,7 @@ ja:
         created_on: '作成日'
         created_on_gteq: '作成日は以下以降'
         created_on_lteq: '作成日は以下以前'
+        price_not_null: '価格入力あり'
 
   memos:
     edit:

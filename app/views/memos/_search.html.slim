@@ -6,6 +6,7 @@
     = f.input :created_on_gteq, label: Memo.human_attribute_name(:created_on_gteq), input_html: { type: 'date' }
     = f.input :created_on_lteq, label: Memo.human_attribute_name(:created_on_lteq), input_html: { type: 'date' }
     = f.input :tags_contains, wrapper: :horizontal_collection_inline, include_hidden: false, as: :check_boxes, collection: Memo.all_tags.sort, label: Memo.human_attribute_name(:tags)
+    = f.input :price_not_null, as: :boolean, label: Memo.human_attribute_name(:price_not_null)
 
   .form-actions
     .col-sm-9.offset-sm-3
