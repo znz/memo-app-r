@@ -5,7 +5,7 @@ inherit_mode:
 require:
 - rubocop-performance
 - rubocop-rails
-- standard/cop/semantic_blocks
+- standard/cop/block_single_line_braces
 
 inherit_gem:
   standard: config/base.yml
