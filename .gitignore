@@ -26,3 +26,5 @@
 /config/master.key
 
 /docker-compose.override.yml
+
+/.env
