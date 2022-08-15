@@ -5,7 +5,6 @@ class Memo < ApplicationRecord
   acts_as_taggable_array_on :tags
   belongs_to :user
 
-  validates :user, presence: true
   private def validate_tags
     if !tags.is_a?(Array) || tags.any?(&:blank?)
       errors.add(:tags, :invalid)
