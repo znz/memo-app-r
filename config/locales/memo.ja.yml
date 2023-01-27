@@ -22,8 +22,12 @@ ja:
         created_on_lteq: '作成日は以下以前'
 
   memos:
+    create:
+      success: "Memo was successfully created."
     edit:
       title: 'メモ編集'
+    destroy:
+      success: "Memo was successfully destroyed."
     form:
       new_tag: '新規タグ'
     index:
@@ -36,3 +40,5 @@ ja:
         全て: ~
         入力あり: 1
         入力なし: 0
+    update:
+      success: "Memo was successfully updated."

@@ -1,0 +1,8 @@
+ja:
+  memos:
+    create:
+      success: "Memo was successfully created."
+    destroy:
+      success: "Memo was successfully destroyed."
+    update:
+      success: "Memo was successfully updated."
