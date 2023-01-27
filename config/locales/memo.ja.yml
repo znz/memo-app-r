@@ -23,11 +23,11 @@ ja:
 
   memos:
     create:
-      success: "Memo was successfully created."
+      success: 'メモが作成されました。'
     edit:
       title: 'メモ編集'
     destroy:
-      success: "Memo was successfully destroyed."
+      success: 'メモが削除されました。'
     form:
       new_tag: '新規タグ'
     index:
@@ -41,4 +41,4 @@ ja:
         入力あり: 1
         入力なし: 0
     update:
-      success: "Memo was successfully updated."
+      success: 'メモが更新されました。'
