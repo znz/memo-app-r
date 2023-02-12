@@ -22,6 +22,15 @@ class Memo < ApplicationRecord
     where("tags @> ARRAY[?]::varchar[]", values&.map(&:to_s))
   }
 
+
+  def self.ransackable_attributes(_auth_object = nil)
+    ["content", "create_from", "created_at", "created_on", "hostname", "id", "info", "lonlat", "price", "tags", "updated_at", "user_agent", "user_id"]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    ["user"]
+  end
+
   def self.ransackable_scopes(_auth_object = nil)
     %i[tags_contains]
   end
