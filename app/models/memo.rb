@@ -13,7 +13,7 @@ class Memo < ApplicationRecord
 
   private def unique_tags
     if tags.is_a?(Array)
-      self.tags = tags.uniq.sort.reject(&:blank?)
+      self.tags = tags.uniq.sort.compact_blank
     end
   end
   before_validation :unique_tags
