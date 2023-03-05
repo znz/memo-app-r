@@ -87,3 +87,4 @@ gem "rack-attack"
 
 # suppress net-protocol warnings
 gem "net-http"
+gem "uri", "0.10.0"
