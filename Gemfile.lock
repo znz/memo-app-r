@@ -183,7 +183,7 @@ GEM
     pg (1.4.6)
     popper_js (1.16.1)
     public_suffix (5.0.1)
-    puma (4.3.12)
+    puma (6.1.1)
       nio4r (~> 2.0)
     pundit (2.3.0)
       activesupport (>= 3.0.0)
@@ -351,7 +351,7 @@ DEPENDENCIES
   letter_opener_web
   listen (~> 3.2)
   pg (>= 0.18, < 2.0)
-  puma (~> 4.1)
+  puma (~> 6.1)
   pundit
   rack-attack
   rails (~> 6.0.x)

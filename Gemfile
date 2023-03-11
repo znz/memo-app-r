@@ -11,7 +11,7 @@ gem "rails", "~> 6.0.x"
 gem "pg", ">= 0.18", "< 2.0", group: :postgresql
 gem "activerecord-postgis-adapter", group: :postgresql
 # Use Puma as the app server
-gem "puma", "~> 4.1"
+gem "puma", "~> 6.1"
 # Use SCSS for stylesheets
 gem "sass-rails", ">= 6"
 
