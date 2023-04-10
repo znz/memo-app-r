@@ -63,7 +63,7 @@ GEM
       minitest (>= 5.1)
       tzinfo (~> 2.0)
       zeitwerk (~> 2.3)
-    acts-as-taggable-array-on (0.6.0)
+    acts-as-taggable-array-on (0.7.0)
       activerecord (>= 5.2)
       activesupport (>= 5.2)
     addressable (2.8.3)
