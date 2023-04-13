@@ -6,6 +6,13 @@ updates:
   schedule:
     interval: "daily"
 
+- package-ecosystem: "docker"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  - dependency-name: "ruby"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
