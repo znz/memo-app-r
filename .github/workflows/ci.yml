@@ -9,7 +9,7 @@ jobs:
 
     services:
       postgres:
-        image: mdillon/postgis:10-alpine
+        image: postgis/postgis:latest
         env:
           POSTGRES_PASSWORD: cisecretpassword
           POSTGRES_DB: ci_test_db
