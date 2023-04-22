@@ -39,6 +39,11 @@ Things you may want to cover:
 - `docker compose build --no-cache web`
 - `docker compose run --rm web bundle update`
 
+## Run tests
+
+- `docker compose run --rm web rails db:setup RAILS_ENV=test`
+- `docker compose run --rm web rails test -v`
+
 ## Clean up development environment
 
 - `docker compose down -v`
