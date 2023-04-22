@@ -66,6 +66,7 @@ group :development do
   gem "letter_opener_web"
   gem "standard", require: false
   gem "rubocop-rails", require: false
+  gem "rubocop-capybara", require: false
 end
 
 gem "rails-i18n"

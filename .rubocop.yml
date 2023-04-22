@@ -5,6 +5,7 @@ inherit_mode:
 require:
 - rubocop-performance
 - rubocop-rails
+- rubocop-capybara
 - standard/cop/block_single_line_braces
 
 inherit_gem:
