@@ -34,6 +34,13 @@ Things you may want to cover:
 - open `http://localhost:7379/`
 - `bundle install --without postgresql` on host if needed
 
+### How to create a test user
+
+```ruby
+user = User.create!(email: "test@example.com", password: "password")
+user.confirm
+```
+
 ## Update development environment
 
 - `docker compose build --no-cache web`
