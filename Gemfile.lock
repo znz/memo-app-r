@@ -102,6 +102,7 @@ GEM
     debug (1.8.0)
       irb (>= 1.5.0)
       reline (>= 0.3.1)
+    debugvisualizer (0.1.8)
     devise (4.9.2)
       bcrypt (~> 3.0)
       orm_adapter (~> 0.1)
@@ -359,6 +360,7 @@ DEPENDENCIES
   capybara
   coffee-rails (~> 5.0)
   debug
+  debugvisualizer
   devise
   devise-i18n
   jbuilder (~> 2.7)

@@ -39,6 +39,7 @@ gem "bootsnap", ">= 1.4.4", require: false
 
 group :development, :test do
   gem "debug"
+  gem "debugvisualizer"
 end
 
 group :development do
