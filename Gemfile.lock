@@ -76,9 +76,9 @@ GEM
     bindex (0.8.1)
     bootsnap (1.16.0)
       msgpack (~> 1.2)
-    bootstrap (4.6.2)
+    bootstrap (5.3.1)
       autoprefixer-rails (>= 9.1.0)
-      popper_js (>= 1.16.1, < 2)
+      popper_js (>= 2.11.8, < 3)
       sassc-rails (>= 2.0.0)
     builder (3.2.4)
     capybara (3.39.2)
@@ -190,7 +190,7 @@ GEM
       ast (~> 2.4.1)
       racc
     pg (1.5.4)
-    popper_js (1.16.1)
+    popper_js (2.11.8)
     public_suffix (5.0.3)
     puma (5.6.6)
       nio4r (~> 2.0)
@@ -363,7 +363,7 @@ DEPENDENCIES
   activerecord-postgis-adapter
   acts-as-taggable-array-on
   bootsnap (>= 1.4.4)
-  bootstrap (< 5)
+  bootstrap (< 6)
   capybara
   coffee-rails (~> 5.0)
   debug
