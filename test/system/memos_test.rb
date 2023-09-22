@@ -19,7 +19,7 @@ class MemosTest < ApplicationSystemTestCase
 
   test "creating a Memo" do
     visit memos_url
-    click_on "New Memo"
+    click_link "New Memo"
 
     fill_in "Category", with: @memo.category
     fill_in "Content", with: @memo.content
@@ -28,15 +28,15 @@ class MemosTest < ApplicationSystemTestCase
     fill_in "Price", with: @memo.price
     fill_in "Tags", with: @memo.tags
     fill_in "User", with: @memo.user_id
-    click_on "Create Memo"
+    click_button "Create Memo"
 
     assert_text "Memo was successfully created"
-    click_on "Back"
+    click_link "Back"
   end
 
   test "updating a Memo" do
     visit memos_url
-    click_on "Edit", match: :first
+    click_link "Edit", match: :first
 
     fill_in "Category", with: @memo.category
     fill_in "Content", with: @memo.content
@@ -45,16 +45,16 @@ class MemosTest < ApplicationSystemTestCase
     fill_in "Price", with: @memo.price
     fill_in "Tags", with: @memo.tags
     fill_in "User", with: @memo.user_id
-    click_on "Update Memo"
+    click_button "Update Memo"
 
     assert_text "Memo was successfully updated"
-    click_on "Back"
+    click_link "Back"
   end
 
   test "destroying a Memo" do
     visit memos_url
     page.accept_confirm do
-      click_on "Destroy", match: :first
+      click_link "Destroy", match: :first
     end
 
     assert_text "Memo was successfully destroyed"
