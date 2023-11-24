@@ -51,7 +51,7 @@ $(function() {
     navigator.geolocation.clearWatch(id);
     return id = null;
   };
-  $(document).on('turbolinks:load', start);
-  $(document).on('turbolinks:click', stop);
+  $(document).on('turbo:load', start);
+  $(document).on('turbo:click', stop);
   return start();
 });
