@@ -9,7 +9,7 @@ p.page_entries_info= page_entries_info @memos
 - if params.dig(:q)
   p.total
     = t(:'.total')
-    = @memos_without_pagination.sum(:price).to_s(:delimited)
+    = @memos_without_pagination.sum(:price).to_fs(:delimited)
 
 table.table
   thead
@@ -31,7 +31,7 @@ table.table
         td
           div.arib-font.memo-scroll
             = simple_format memo.content
-        td = memo.price&.to_s(:delimited)
+        td = memo.price&.to_fs(:delimited)
         td
           = link_to 'Show', memo, accesskey: (idx.zero? ? 'S' : nil)
           '

@@ -6,7 +6,7 @@ dl.row
   dt.col-sm-3 = Memo.human_attribute_name(:content)
   dd.col-sm-9.arib-font = simple_format @memo.content
   dt.col-sm-3 = Memo.human_attribute_name(:price)
-  dd.col-sm-9 = @memo.price&.to_s(:delimited)
+  dd.col-sm-9 = @memo.price&.to_fs(:delimited)
   dt.col-sm-3 = Memo.human_attribute_name(:tags)
   dd.col-sm-9
     ul.list-unstyled
