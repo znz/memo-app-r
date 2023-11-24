@@ -18,5 +18,20 @@ AllCops:
   - 'db/schema.rb'
   NewCops: enable
 
+Layout/SpaceInsidePercentLiteralDelimiters:
+  Exclude:
+  - Gemfile
+
+Layout/ExtraSpacing:
+  AllowForAlignment: true
+
+Layout/SpaceInsideArrayLiteralBrackets:
+  Exclude:
+  - config/environments/production.rb
+
+Style/GlobalStdStream:
+  Exclude:
+  - config/environments/production.rb
+
 Rails:
   Enabled: yes
