@@ -8,3 +8,18 @@ dl.row
   dd.col-sm-9 = RUBY_DESCRIPTION
   dt.col-sm-3 RubyVM::YJIT.enabled?
   dd.col-sm-9 = RubyVM::YJIT.enabled?
+
+- if RubyVM::YJIT.enabled?
+  table.table
+    caption RubyVM::YJIT.runtime_stats
+    - RubyVM::YJIT.runtime_stats.each do |k, v|
+      tr
+        th = k
+        td = v
+
+table.table
+  caption GC.stat
+  - GC.stat.each do |k, v|
+    tr
+      th = k
+      td = v
