@@ -1,2 +1,10 @@
 h1 = t(:'.h1')
 p = t(:'.p1')
+
+dl.row
+  dt.col-sm-3 Rails version:
+  dd.col-sm-9 = Rails.version
+  dt.col-sm-3 Ruby version:
+  dd.col-sm-9 = RUBY_DESCRIPTION
+  dt.col-sm-3 RubyVM::YJIT.enabled?
+  dd.col-sm-9 = RubyVM::YJIT.enabled?
