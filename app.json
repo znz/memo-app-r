@@ -9,5 +9,10 @@
             "attempts": 3
         }
     ]
+  },
+  "scripts": {
+    "dokku": {
+      "predeploy": "bundle exec rails db:migrate"
+    }
   }
 }
