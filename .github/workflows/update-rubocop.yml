@@ -20,6 +20,9 @@ jobs:
       with:
         bundler-cache: true
     - run: |
+        set -euxo pipefail
         bundle update $(git grep -ho 'rubocop[-a-z_]*' Gemfile)
+        git status
+        git diff
         git commit -m 'Update rubocop-* gem' Gemfile.lock
         git show HEAD
