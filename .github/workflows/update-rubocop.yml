@@ -24,5 +24,14 @@ jobs:
         bundle update $(bundle list --name-only | grep rubocop)
         git status
         git diff
-        git commit -m 'Update rubocop-* gem' Gemfile.lock
-        git show HEAD
+    - name: Create Pull Request
+      id: cpr
+      uses: peter-evans/create-pull-request@v6
+      with:
+        add-paths: |
+          Gemfile.lock
+    - name: Check outputs
+      if: ${{ steps.cpr.outputs.pull-request-number }}
+      run: |
+        echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+        echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
