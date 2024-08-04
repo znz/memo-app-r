@@ -80,7 +80,7 @@ test:
 #     url: <%= ENV['DATABASE_URL'] %>
 #
 production:
-  url: <%= ENV.fetch('DATABASE_URL', '').sub(/^postgres/, "postgis") %>
+  url: <%= ENV.fetch('DATABASE_URL', 'postgres://myuser:mypass@localhost/somedatabase').sub(/^postgres/, "postgis") %>
 #production:
 #  <<: *default
 #  database: memo-app-r_production
