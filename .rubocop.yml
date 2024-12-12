@@ -6,10 +6,12 @@ require:
 - rubocop-performance
 - rubocop-rails
 - rubocop-capybara
-- standard/cop/block_single_line_braces
+- standard-custom
 
 inherit_gem:
   standard: config/base.yml
+  standard-custom: config/base.yml
+  standard-performance: config/base.yml
 
 AllCops:
   Exclude:
