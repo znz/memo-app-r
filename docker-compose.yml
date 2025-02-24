@@ -26,6 +26,8 @@ services:
     environment:
       DATABASE_URL: postgis://postgres:mysecretpassword@db:5432
       BUNDLE_AUTO_INSTALL: true
+      STATS_BASIC_AUTH_USER: "stats-user"
+      STATS_BASIC_AUTH_PASS: "stats-pass"
 volumes:
   db-data:
   dot-bundle:

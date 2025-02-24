@@ -10,4 +10,7 @@ Rails.application.routes.draw do
   get "pages/about", as: :about
   root to: "memos#index"
   mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
+
+  get "stats/gc"
+  get "stats/yjit"
 end
