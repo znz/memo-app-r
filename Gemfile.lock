@@ -220,7 +220,7 @@ GEM
     parser (3.3.9.0)
       ast (~> 2.4.1)
       racc
-    pg (1.5.9)
+    pg (1.6.0)
     popper_js (1.16.1)
     pp (0.6.2)
       prettyprint
@@ -424,7 +424,7 @@ DEPENDENCIES
   jquery-rails
   kaminari
   letter_opener_web
-  pg (~> 1.5)
+  pg (~> 1.6)
   puma (>= 5.0)
   pundit
   rack-attack
