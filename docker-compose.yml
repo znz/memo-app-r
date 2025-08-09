@@ -2,6 +2,7 @@
 services:
   db:
     image: postgis/postgis:latest
+    platform: linux/amd64
     volumes:
     - db-data:/var/lib/postgresql/data:cached
     environment:
