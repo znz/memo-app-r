@@ -8,6 +8,8 @@ updates:
   ignore:
   - dependency-name: "rails"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  - dependency-name: "activerecord-postgis-adapter" # https://github.com/rgeo/activerecord-postgis-adapter/blob/master/README.md#version-compatibility
+    update-types: ["version-update:semver-major"]
   - dependency-name: "bootstrap"
     update-types: ["version-update:semver-major"]
   allow:
