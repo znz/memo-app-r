@@ -50,7 +50,7 @@ class MemosController < ApplicationController
         format.json { render :show, status: :created, location: @memo }
       else
         format.html { render :new }
-        format.json { render json: @memo.errors, status: :unprocessable_entity }
+        format.json { render json: @memo.errors, status: :unprocessable_content }
       end
     end
   end
@@ -64,7 +64,7 @@ class MemosController < ApplicationController
         format.json { render :show, status: :ok, location: @memo }
       else
         format.html { render :edit }
-        format.json { render json: @memo.errors, status: :unprocessable_entity }
+        format.json { render json: @memo.errors, status: :unprocessable_content }
       end
     end
   end
