@@ -12,6 +12,8 @@ updates:
     update-types: ["version-update:semver-major"]
   - dependency-name: "bootstrap"
     update-types: ["version-update:semver-major"]
+  - dependency-name: "minitest"
+    update-types: ["version-update:semver-major"]
   allow:
   - dependency-type: all
 
