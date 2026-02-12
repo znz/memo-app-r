@@ -97,3 +97,5 @@ gem "rollbar"
 gem "rack-attack"
 
 gem "coffee-rails"
+
+gem "minitest", "< 6"
