@@ -6,8 +6,8 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 7.2.0"
 
-# The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
-gem "sprockets-rails"
+# The modern asset pipeline for Rails [https://github.com/rails/propshaft]
+gem "propshaft"
 
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.6"
@@ -68,9 +68,6 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
-
-# Use Sass to process CSS
-gem "sassc-rails"
 
 group :development do
   gem "letter_opener_web"
