@@ -78,7 +78,6 @@ end
 
 gem "rails-i18n"
 
-gem "bootstrap", "< 5"
 gem "devise"
 gem "devise-i18n"
 gem "jquery-rails"
