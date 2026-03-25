@@ -3,7 +3,7 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-$(function() {
+
   const locupdate = function(pos) {
     const info = document.getElementById("memo_info");
     const lonlat = document.getElementById("memo_lonlat");
@@ -51,7 +51,7 @@ $(function() {
     navigator.geolocation.clearWatch(id);
     return id = null;
   };
-  $(document).on('turbo:load', start);
-  $(document).on('turbo:click', stop);
-  return start();
-});
+
+  document.addEventListener('turbo:load', start);
+  document.addEventListener('turbo:click', stop);
+  start();
