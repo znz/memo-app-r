@@ -15,7 +15,7 @@ class DisableExtensionForUuid < ActiveRecord::Migration[7.2]
   end
 
   private def pgcrypto_still_required?
-    select_value(<<~SQL).to_i.positive?
+    select_value(<<~SQL.squish).to_i.positive?
       SELECT COUNT(*)
       FROM pg_attrdef d
       INNER JOIN pg_class c ON c.oid = d.adrelid
