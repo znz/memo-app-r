@@ -1,10 +1,10 @@
 ---
 services:
   db:
-    image: postgis/postgis:latest
+    image: postgis/postgis:18-3.6
     platform: linux/amd64
     volumes:
-    - db-data:/var/lib/postgresql/data:cached
+    - db-data:/var/lib/postgresql:cached
     environment:
       POSTGRES_PASSWORD: mysecretpassword
   web:
