@@ -13,8 +13,8 @@ module Base58Uuid
         param =
           begin
             Base58Uuid.decode58_to_uuid(param)
-          rescue
-            nil
+          rescue ArgumentError
+            raise ActiveRecord::RecordNotFound
           end
       end
       find(param)
