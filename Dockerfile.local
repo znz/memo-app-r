@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
+# check=error=true
 FROM ruby:3.3.11
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
  --mount=type=cache,target=/var/lib/apt,sharing=locked \
