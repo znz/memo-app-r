@@ -83,7 +83,7 @@ class MemosController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_memo
-    @memo = Memo.find(params[:id])
+    @memo = Memo.find_uuid(params[:id])
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.

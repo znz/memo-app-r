@@ -2,6 +2,8 @@
 
 # Memo data
 class Memo < ApplicationRecord
+  include Base58Uuid
+
   acts_as_taggable_array_on :tags
   belongs_to :user
 
