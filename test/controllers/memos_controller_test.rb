@@ -55,12 +55,12 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should not show memo with invalid uuid_v4 length" do
-    get memo_url(SecureRandom.uuid_v4 + 'x')
+    get memo_url(SecureRandom.uuid_v4 + "x")
     assert_response :not_found
   end
 
   test "should not show memo with invalid uuid_v7 length" do
-    get memo_url(SecureRandom.uuid_v7 + 'x')
+    get memo_url(SecureRandom.uuid_v7 + "x")
     assert_response :not_found
   end
 
