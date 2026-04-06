@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Base58uuid
+module Base58Uuid
   def to_param
     return id unless id
     return id if id[14] == "4"
@@ -10,7 +10,12 @@ module Base58uuid
   def self.included(base)
     def base.find_uuid(param)
       if param.is_a?(String) && param.length == 22
-        param = Base58uuid.decode58_to_uuid(param)
+        param =
+          begin
+            Base58Uuid.decode58_to_uuid(param)
+          rescue
+            nil
+          end
       end
       find(param)
     end
@@ -22,9 +27,20 @@ module Base58uuid
 
   def decode58_to_uuid(encoded, alphabet: BASE58_ALPHABET)
     if encoded.length != 22
-      raise "Expected Base58 string of length 22, but received string of length #{encoded.length}: #{encoded}"
+      raise ArgumentError, "Expected Base58 string of length 22, but received string of length #{encoded.length}: #{encoded}"
     end
-    encoded.each_char.inject(0) { |s, c| s * 58 + alphabet.index(c) }.to_s(16).rjust(32, "0")
+    num = encoded.each_char.inject(0) do |s, c|
+      index = alphabet.index(c)
+      if index.nil?
+        raise ArgumentError, "Invalid Base58 character #{c.inspect} in #{encoded}"
+      end
+      s * 58 + index
+    end
+    hex = num.to_s(16)
+    if hex.length > 32
+      raise ArgumentError, "Decoded Base58 value does not fit in 128 bits: #{encoded}"
+    end
+    hex.rjust(32, "0")
   end
 
   def encode58_from_uuid(uuid, alphabet: BASE58_ALPHABET)
