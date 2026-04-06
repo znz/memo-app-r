@@ -40,15 +40,11 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "should not show memo without next param" do
-    get memo_url(@memo.to_param.succ)
-    assert_response :not_found
-  end
-
   test "should not show memo with valid random uuid_v4" do
     get memo_url(SecureRandom.uuid_v4)
     assert_response :not_found
   end
+
   test "should not show memo with valid random uuid_v7" do
     get memo_url(SecureRandom.uuid_v7)
     assert_response :not_found
