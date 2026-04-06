@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class DisableExtensionForUuid < ActiveRecord::Migration[7.2]
   def up
     return unless extension_enabled?("pgcrypto")

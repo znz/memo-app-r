@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ChangeUuidDefaultToV7ForUsers < ActiveRecord::Migration[7.2]
   def up
     unless select_value("SELECT to_regprocedure('uuidv7()')")
