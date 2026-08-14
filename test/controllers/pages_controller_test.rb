@@ -15,4 +15,9 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get about_url
     assert_response :success
   end
+
+  test "should get ip" do
+    get ip_url
+    assert_response :success
+  end
 end

@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   resources :memos
   devise_for :users
   get "pages/about", as: :about
+  get "ip" => "pages#ip", :as => :ip
   root to: "memos#index"
   mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
 
