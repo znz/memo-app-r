@@ -20,9 +20,6 @@ AllCops:
   - 'db/schema.rb'
   NewCops: enable
 
-Capybara/ClickLinkOrButtonStyle:
-  EnforcedStyle: strict
-
 Layout/SpaceInsideHashLiteralBraces:
   EnforcedStyle: space
 
