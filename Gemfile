@@ -105,3 +105,5 @@ gem "acts-as-taggable-array-on"
 
 gem "rollbar"
 gem "rack-attack"
+
+gem "json", "< 3"
