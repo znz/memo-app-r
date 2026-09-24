@@ -350,9 +350,9 @@ GEM
     slim (5.2.2)
       temple (~> 0.10.0)
       tilt (>= 2.1.0)
-    slim-rails (4.0.0)
-      actionpack (>= 3.1)
-      railties (>= 3.1)
+    slim-rails (4.0.1)
+      actionpack (>= 7.0)
+      railties (>= 7.0)
       slim (>= 3.0, < 6.0, != 5.0.0)
     standard (1.35.0.1)
       language_server-protocol (~> 3.17.0.2)
@@ -576,7 +576,7 @@ CHECKSUMS
   selenium-webdriver (4.49.0) sha256=b430f091a3cababb356b6f6132e0e4f385b017819355f563557e1537819edc89
   simple_form (5.4.1) sha256=58c3d229034c7e5545035c3271b6f030ef730c340b9d7d8eb730e0a385b20808
   slim (5.2.2) sha256=d1b5a575fcfa904a5eb66ec0a8f48a2363c7b9c57d50debb42dbab31524ef5e3
-  slim-rails (4.0.0) sha256=2cfee5c4ba00d4d935676db1e74a05dbaf9dd6f789903a1006e3bb687bbe36e2
+  slim-rails (4.0.1) sha256=bd8f21eec413738ae65d7732926e65be15061dae17cc85f80e37301916a5a0f4
   standard (1.35.0.1) sha256=ec8992af82aede242b86755970336fe481e2264d23e96de3da7eb28101601e97
   standard-custom (1.0.2) sha256=424adc84179a074f1a2a309bb9cf7cd6bfdb2b6541f20c6bf9436c0ba22a652b
   standard-performance (1.9.0) sha256=49483d31be448292951d80e5e67cdcb576c2502103c7b40aec6f1b6e9c88e3f2
