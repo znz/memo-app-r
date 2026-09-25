@@ -3,6 +3,9 @@ updates:
 
 - package-ecosystem: "bundler"
   directory: "/"
+  commit-message:
+    prefix: "build"
+    include: "scope"
   schedule:
     interval: "daily"
   cooldown:
@@ -24,6 +27,9 @@ updates:
 
 - package-ecosystem: "docker"
   directory: "/"
+  commit-message:
+    prefix: "build"
+    include: "scope"
   schedule:
     interval: "daily"
   ignore:
@@ -32,6 +38,9 @@ updates:
 
 - package-ecosystem: "github-actions"
   directory: "/"
+  commit-message:
+    prefix: "ci"
+    include: "scope"
   schedule:
     interval: "daily"
   cooldown:
