@@ -4,6 +4,9 @@
 class Reminder < ApplicationRecord
   include Base58Uuid
 
+  URGENT_WITHIN = 1.hour
+  URGENT_RATIO = 0.25
+
   belongs_to :user
   has_many :reminder_tags, dependent: :destroy
   has_many :tags, -> { order(:name) }, through: :reminder_tags
@@ -36,6 +39,68 @@ class Reminder < ApplicationRecord
 
   def schedule
     Reminder::Schedule.new(rule:, starts_at:, due_at:, repeat_until:)
+  end
+
+  def status_at(now = Time.current)
+    return Status.new(state: :disabled) unless enabled?
+
+    if rule.windowed?
+      windowed_status_at(now)
+    elsif rule.is_a?(Recurrence::AfterCompletion)
+      after_completion_status_at(now)
+    else
+      single_status_at(now)
+    end
+  end
+
+  # Completions on the local date of time
+  def completed_count_on(time)
+    (last_completed_at&.to_date == time.to_date) ? completed_count : 0
+  end
+
+  # No windows: starts_at enables, repeat_until ends, and only the one hour rule makes it urgent
+  private def after_completion_status_at(now)
+    repeat_limit = schedule.repeat_limit
+    available_at = last_completed_at && (last_completed_at + rule.cooldown_minutes.minutes)
+    if starts_at && now < starts_at
+      Status.new(state: :waiting, starts_at:)
+    elsif repeat_limit && now >= repeat_limit
+      Status.new(state: :expired)
+    elsif rule.max_per_day && completed_count_on(now) >= rule.max_per_day
+      Status.new(state: :limit_reached, starts_at: [now.tomorrow.beginning_of_day, available_at].compact.max)
+    elsif available_at && now < available_at
+      Status.new(state: :cooling_down, starts_at: available_at)
+    else
+      Status.new(state: :active, ends_at: [(now.end_of_day if rule.max_per_day), repeat_limit].compact.min)
+    end
+  end
+
+  private def windowed_status_at(now)
+    window = schedule.window_at(now)
+    if window.nil?
+      next_window = schedule.next_window_after(now)
+      return Status.new(state: :expired) unless next_window
+
+      Status.new(state: :waiting, starts_at: next_window.starts_at, ends_at: next_window.ends_at)
+    elsif last_completed_at && window.cover?(last_completed_at)
+      Status.new(state: :done, starts_at: window.starts_at, ends_at: window.ends_at)
+    else
+      Status.new(state: :active, starts_at: window.starts_at, ends_at: window.ends_at)
+    end
+  end
+
+  private def single_status_at(now)
+    start = starts_at || created_at
+    ends_at = Schedule.exclusive_end(due_at) if due_at
+    if last_completed_at
+      Status.new(state: :done, starts_at: start, ends_at:)
+    elsif start.nil? || now < start
+      Status.new(state: :waiting, starts_at: start, ends_at:)
+    elsif ends_at && now >= ends_at
+      Status.new(state: :overdue, starts_at: start, ends_at:)
+    else
+      Status.new(state: :active, starts_at: start, ends_at:)
+    end
   end
 
   private def valid_rule
