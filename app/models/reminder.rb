@@ -32,6 +32,7 @@ class Reminder < ApplicationRecord
   validate :recurrence_must_be_valid
   validate :recurrence_input_must_be_valid
   validate :times_must_be_ordered
+  validate :prioritize_at_must_be_in_first_window
   validate :tags_must_be_owned
 
   scope :enabled, -> { where(enabled: true) }
@@ -242,6 +243,14 @@ class Reminder < ApplicationRecord
 
     errors.add(:due_at, :after_starts_at) if due_at && due_at <= starts_at
     errors.add(:repeat_until, :after_starts_at) if repeat_until && repeat_until <= starts_at
+  end
+
+  # In the first window (starts_at .. the minute of due_at) as far as they are given
+  private def prioritize_at_must_be_in_first_window
+    return unless prioritize_at
+
+    errors.add(:prioritize_at, :not_before_starts_at) if starts_at && prioritize_at < starts_at
+    errors.add(:prioritize_at, :not_after_due_at) if due_at && prioritize_at >= Schedule.exclusive_end(due_at)
   end
 
   private def tags_must_be_owned

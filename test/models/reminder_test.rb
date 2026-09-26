@@ -80,6 +80,42 @@ class ReminderTest < ActiveSupport::TestCase
     assert reminder.errors.of_kind?(:due_at, :not_allowed)
   end
 
+  test "prioritize_at must not be before starts_at" do
+    reminder = new_reminder(prioritize_at: at(2026, 1, 1, 8, 59))
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:prioritize_at, :not_before_starts_at)
+    assert new_reminder(prioritize_at: at(2026, 1, 1, 9, 0)).valid?
+  end
+
+  test "prioritize_at must not be after the minute of due_at" do
+    reminder = new_reminder(due_at: at(2026, 1, 1, 12, 30), prioritize_at: at(2026, 1, 1, 12, 31))
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:prioritize_at, :not_after_due_at)
+    assert new_reminder(due_at: at(2026, 1, 1, 12, 30), prioritize_at: at(2026, 1, 1, 12, 30, 59)).valid?
+    assert new_reminder(prioritize_at: at(2026, 1, 3, 9, 0)).valid?
+  end
+
+  test "prioritize_at of none is checked only against the given starts_at and due_at" do
+    none = { "type" => "none" }
+    assert new_reminder(recurrence: none, starts_at: nil, prioritize_at: at(2025, 1, 1, 0, 0)).valid?
+    assert new_reminder(recurrence: none, prioritize_at: at(2027, 1, 1, 0, 0)).valid?
+    reminder = new_reminder(recurrence: none, starts_at: nil, due_at: at(2026, 3, 31, 18, 0), prioritize_at: at(2026, 3, 31, 18, 1))
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:prioritize_at, :not_after_due_at)
+    reminder = new_reminder(recurrence: none, prioritize_at: at(2026, 1, 1, 8, 0))
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:prioritize_at, :not_before_starts_at)
+  end
+
+  test "prioritize_at of after_completion is an absolute time after starts_at" do
+    after_completion = { "type" => "after_completion", "cooldown_minutes" => 60 }
+    assert new_reminder(recurrence: after_completion, prioritize_at: at(2027, 1, 1, 0, 0)).valid?
+    assert new_reminder(recurrence: after_completion, starts_at: nil, prioritize_at: at(2025, 1, 1, 0, 0)).valid?
+    reminder = new_reminder(recurrence: after_completion, prioritize_at: at(2026, 1, 1, 8, 59))
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:prioritize_at, :not_before_starts_at)
+  end
+
   test "radius_m must be positive" do
     [0, -1, nil].each do |radius_m|
       reminder = new_reminder(radius_m:)

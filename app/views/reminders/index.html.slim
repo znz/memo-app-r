@@ -7,6 +7,7 @@ table.table
       th = Reminder.human_attribute_name(:name)
       th = Reminder.human_attribute_name(:tags)
       th = Reminder.human_attribute_name(:recurrence)
+      th = Reminder.human_attribute_name(:prioritize_at)
       th = t(:'.state')
       th = Reminder.human_attribute_name(:last_completed_at)
       th = Reminder.human_attribute_name(:enabled)
@@ -19,6 +20,7 @@ table.table
           - reminder.tags.each do |tag_record|
             =< theme_badge tag_record.name, tag_record.color
         td = recurrence_label(reminder)
+        td = reminder.prioritize_at && l(reminder.prioritize_at, format: :short)
         td = reminder_state_label(reminder, now)
         td = reminder.last_completed_at && l(reminder.last_completed_at, format: :short)
         td = reminder.enabled? ? t(:'.enabled') : t(:'.disabled')

@@ -20,7 +20,7 @@ dl.row
   dd.col-sm-9 = @reminder.enabled? ? t(:'.enabled') : t(:'.disabled')
   dt.col-sm-3 = t(:'.state')
   dd.col-sm-9 = reminder_state_label(@reminder, now)
-  - %i[starts_at due_at repeat_until].each do |attribute|
+  - %i[starts_at due_at prioritize_at repeat_until].each do |attribute|
     dt.col-sm-3 = Reminder.human_attribute_name(attribute)
     dd.col-sm-9 = @reminder[attribute] && l(@reminder[attribute], format: :long)
   dt.col-sm-3 = Reminder.human_attribute_name(:recurrence)

@@ -43,9 +43,10 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[type=checkbox][name=?][value=?]", "reminder[memo_tags][]", "tag1"
       assert_select "input[type=text][name=?]", "reminder[memo_tags][]"
       assert_select "input[type=checkbox][name=?]", "reminder[enabled]"
-      %w[starts_at due_at repeat_until].each do |name|
+      %w[starts_at due_at prioritize_at repeat_until].each do |name|
         assert_select "input[type=datetime-local][name=?]", "reminder[#{name}]"
       end
+      assert_select ".reminder_prioritize_at small", /通知開始日時と同じにすると実行可能になった時点で上に出ます/
       assert_select "select[name=?]", "reminder[recurrence_preset]" do
         assert_select "option", Recurrence::PRESETS.size
         assert_select "option[selected][value=none]", "単発"
@@ -71,7 +72,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_difference("users(:one).reminders.count") do
       post reminders_url, params: { reminder: {
         name: "朝会", description: "10分", memo_template: "朝会メモ", memo_tags: ["", "tag1", "会議"],
-        enabled: "1", starts_at: "2026-01-08T09:30", due_at: "2026-01-08T09:44", repeat_until: "",
+        enabled: "1", starts_at: "2026-01-08T09:30", due_at: "2026-01-08T09:44", prioritize_at: "2026-01-08T09:40", repeat_until: "",
         recurrence_preset: "weekdays", recurrence_json: "", latitude: "35.6817", longitude: "139.7671", radius_m: "300",
         tag_ids: ["", tags(:work).id]
       } }
@@ -83,6 +84,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_equal({ "type" => "weekly", "weekdays" => [1, 2, 3, 4, 5] }, reminder.recurrence)
     assert_equal Time.zone.local(2026, 1, 8, 9, 30), reminder.starts_at
     assert_equal Time.zone.local(2026, 1, 8, 9, 44), reminder.due_at
+    assert_equal Time.zone.local(2026, 1, 8, 9, 40), reminder.prioritize_at
     assert_nil reminder.repeat_until
     assert_equal ["tag1", "会議"], reminder.memo_tags
     assert_equal [tags(:work)], reminder.tags.to_a
@@ -136,6 +138,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_select "dd", "2026/01/07 09:00 〜 2026/01/07 12:30"
     assert_select "dd", "2026/01/08 09:00 〜 2026/01/08 12:30"
     assert_select "dd pre", JSON.pretty_generate({ "type" => "daily" })
+    assert_select "dt", "優先開始日時"
     assert_select "a[href=?]", edit_reminder_path(reminders(:lunch_medicine))
     assert_select "form[action=?] input[name=_method][value=delete]", reminder_path(reminders(:lunch_medicine))
   end
@@ -155,6 +158,17 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_select "dd", reminder.rule.label
   end
 
+  test "index and show have prioritize_at" do
+    @reminder.update!(prioritize_at: Time.zone.local(2026, 1, 5, 18, 0))
+    get reminders_url
+    assert_select "th", "優先開始日時"
+    assert_select "tr##{ActionView::RecordIdentifier.dom_id(@reminder)} td", "01/05 18:00"
+
+    get reminder_url(@reminder)
+    assert_select "dt", "優先開始日時"
+    assert_select "dd", "2026/01/05 18:00"
+  end
+
   test "should get edit" do
     get edit_reminder_url(@reminder)
     assert_response :success
@@ -162,6 +176,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", reminder_path(@reminder) do
       assert_select "input[type=datetime-local][name=?][value=?]", "reminder[starts_at]", "2026-01-05T09:00"
       assert_select "input[type=datetime-local][name=?][value=?]", "reminder[due_at]", "2026-01-05T19:00"
+      assert_select "input[type=datetime-local][name=?]:not([value])", "reminder[prioritize_at]"
       assert_select "input[type=datetime-local][name=?]:not([value])", "reminder[repeat_until]"
       assert_select "select[name=?] option:first-child[value='']", "reminder[recurrence_preset]", "（変更しない）"
       assert_select "select[name=?] option[selected]", "reminder[recurrence_preset]", count: 0
@@ -182,6 +197,29 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "週報", @reminder.name
     assert_equal({ "type" => "weekly", "weekdays" => [5] }, @reminder.recurrence)
     assert_equal [tags(:health)], @reminder.tags.to_a
+  end
+
+  test "should update prioritize_at" do
+    patch reminder_url(@reminder), params: { reminder: { prioritize_at: "2026-01-05T09:00" } }
+
+    assert_redirected_to reminder_url(@reminder)
+    assert_equal Time.zone.local(2026, 1, 5, 9, 0), @reminder.reload.prioritize_at
+
+    patch reminder_url(@reminder), params: { reminder: { prioritize_at: "" } }
+    assert_nil @reminder.reload.prioritize_at
+  end
+
+  test "should not update prioritize_at out of the first window" do
+    patch reminder_url(@reminder), params: { reminder: { prioritize_at: "2026-01-05T08:59" } }
+
+    assert_response :unprocessable_content
+    assert_select ".reminder_prioritize_at .invalid-feedback", /通知開始日時以降にしてください/
+    assert_nil @reminder.reload.prioritize_at
+
+    patch reminder_url(@reminder), params: { reminder: { prioritize_at: "2026-01-05T19:01" } }
+
+    assert_response :unprocessable_content
+    assert_select ".reminder_prioritize_at .invalid-feedback", /実行可能期限以前にしてください/
   end
 
   test "should update reminder with a preset when the JSON shown in the edit form is left as is" do
