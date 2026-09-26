@@ -52,10 +52,20 @@ class HiddenTagsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to memo_url(memos(:one))
   end
 
-  test "should respond bad request without tag_ids" do
+  test "should delete the cookie without tag_ids or with a scalar" do
+    post hidden_tags_url, params: { tag_ids: [tags(:work).id] }
+    assert_equal [tags(:work).id], hidden_tag_ids_in_cookie
+
     post hidden_tags_url, params: { tag_ids: "garbage" }
 
-    assert_response :bad_request
+    assert_redirected_to new_memo_url
+    assert_empty hidden_tag_ids_in_cookie
+
+    post hidden_tags_url, params: { tag_ids: [tags(:work).id] }
+    post hidden_tags_url
+
+    assert_redirected_to new_memo_url
+    assert_empty hidden_tag_ids_in_cookie
   end
 
   private def hidden_tag_ids_in_cookie = CGI.unescape(cookies["hidden_tag_ids"].to_s).split(",")

@@ -21,6 +21,6 @@ module ReminderBoardLoading
 
   def load_reminder_board
     @reminder_board = build_reminder_board
-    @hideable_tags = current_user.tags.enabled.order(:name)
+    @hideable_tags = current_user.tags.enabled.order(:name).load
   end
 end

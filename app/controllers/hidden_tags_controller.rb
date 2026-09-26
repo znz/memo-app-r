@@ -3,7 +3,7 @@
 # Tags whose reminders are hidden on this device (saved in a cookie)
 class HiddenTagsController < ApplicationController
   def create
-    ids = current_user.tags.where(id: params.expect(tag_ids: []).compact_blank).pluck(:id)
+    ids = current_user.tags.where(id: Array(params[:tag_ids]).compact_blank).pluck(:id)
     if ids.empty?
       cookies.delete(:hidden_tag_ids)
     else
