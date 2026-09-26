@@ -307,6 +307,20 @@ class RecurrenceTest < ActiveSupport::TestCase
     assert_equal at(2026, 7, 15, 9, 0), rule.occurrence_after(at(2026, 4, 15, 9, 0), anchor:)
   end
 
+  test "monthly fifth weekday every 3 months finds occurrences years apart" do
+    rule = build(type: "monthly", interval: 3, nth: 5, weekday: 2)
+    anchor = at(2026, 1, 1, 9, 0)
+    assert_equal at(2028, 10, 31, 9, 0), rule.occurrence_after(anchor, anchor:)
+    assert_equal at(2031, 7, 29, 9, 0), rule.occurrence_at_or_before(at(2034, 1, 30, 9, 0), anchor:)
+  end
+
+  test "monthly fifth weekday every 12 months finds occurrences years apart" do
+    rule = build(type: "monthly", interval: 12, nth: 5, weekday: 0)
+    anchor = at(2026, 1, 1, 9, 0)
+    assert_equal at(2033, 1, 30, 9, 0), rule.occurrence_after(at(2028, 2, 1, 9, 0), anchor:)
+    assert_equal at(2028, 1, 30, 9, 0), rule.occurrence_at_or_before(at(2033, 1, 29, 9, 0), anchor:)
+  end
+
   test "monthly occurrence before the anchor in the first month is skipped" do
     rule = build(type: "monthly", day: 15)
     anchor = at(2026, 1, 20, 9, 0)

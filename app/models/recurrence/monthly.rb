@@ -9,6 +9,8 @@ class Recurrence::Monthly < Recurrence::IntervalRule
   DAYS = [-1, *1..31].freeze
   NTHS = [-1, *1..5].freeze
   WEEKDAYS = [*0..6, BUSINESS].freeze
+  # The weekdays of the calendar repeat every 28 years (within a century)
+  NTH_SEARCH_MONTHS = 28 * 12
 
   attr_reader :day, :nth, :weekday
 
@@ -35,10 +37,11 @@ class Recurrence::Monthly < Recurrence::IntervalRule
     value
   end
 
-  # Candidates are months from the anchor, searched up to `interval * 2 + 12` months
+  # Candidates are months from the anchor, searched up to `interval * 2 + 12` months for a day,
+  # or up to NTH_SEARCH_MONTHS for the nth weekday (a fifth weekday can be missing for years)
   private def estimated_index(time, anchor) = ((time.year - anchor.year) * 12 + time.month - anchor.month).div(interval)
 
-  private def search_count = (interval * 2 + 12).div(interval) + 1
+  private def search_count = (nth ? NTH_SEARCH_MONTHS : interval * 2 + 12).div(interval) + 1
 
   private def occurrence(anchor, index)
     month = anchor.advance(months: index * interval)
