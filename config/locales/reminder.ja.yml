@@ -1,13 +1,54 @@
 ja:
   activerecord:
+    models:
+      reminder: 'リマインダー'
+      reminder_tag: 'リマインダーのタグ'
+
     attributes:
       reminder:
+        user: 'ユーザー'
+        user_id: 'ユーザー'
+        name: '名前'
+        description: '説明'
+        memo_template: 'メモ本文のテンプレート'
+        memo_tags: 'メモに付けるタグ'
+        enabled: '有効'
+        starts_at: '通知開始日時'
+        due_at: '実行可能期限'
+        repeat_until: '繰り返し終了日時'
         recurrence: '繰り返し'
+        recurrence_preset: '繰り返しの種類'
+        recurrence_json: '繰り返しのJSON'
+        lonlat: '位置情報'
+        latitude: '緯度'
+        longitude: '経度'
+        radius_m: '半径（m）'
+        last_completed_at: '最終完了日時'
+        completed_count: '完了回数'
+        tags: 'タグ'
+        tag_ids: 'タグ'
+        created_at: '作成日時'
+        updated_at: '更新日時'
+      reminder_tag:
+        reminder: 'リマインダー'
+        tag: 'タグ'
+        tag_id: 'タグ'
 
     errors:
       models:
         reminder:
           attributes:
+            due_at:
+              after_starts_at: 'は通知開始日時より後にしてください'
+              not_allowed: 'は完了からの繰り返しでは指定できません'
+            repeat_until:
+              after_starts_at: 'は通知開始日時より後にしてください'
+            latitude:
+              pair: 'と経度は両方指定するか両方空にしてください'
+            recurrence_json:
+              invalid_json: 'がJSONとして読み取れません'
+            tag_ids:
+              not_owned: 'に他のユーザーのタグは使えません'
             recurrence:
               not_a_hash: 'はJSONのオブジェクトで指定してください'
               unknown_type: 'の種類「%{type}」は使えません'

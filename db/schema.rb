@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_26_083845) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_26_084643) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
@@ -31,6 +31,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_083845) do
     t.index ["lonlat"], name: "index_memos_on_lonlat", using: :gist
     t.index ["tags"], name: "index_memos_on_tags", using: :gin
     t.index ["user_id"], name: "index_memos_on_user_id"
+  end
+
+  create_table "reminder_tags", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "reminder_id", null: false
+    t.uuid "tag_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["reminder_id", "tag_id"], name: "index_reminder_tags_on_reminder_id_and_tag_id", unique: true
+    t.index ["tag_id"], name: "index_reminder_tags_on_tag_id"
+  end
+
+  create_table "reminders", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
+    t.integer "completed_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.datetime "due_at"
+    t.boolean "enabled", default: true, null: false
+    t.datetime "last_completed_at"
+    t.geography "lonlat", limit: {srid: 4326, type: "st_point", geographic: true}
+    t.string "memo_tags", default: [], null: false, array: true
+    t.text "memo_template"
+    t.string "name", null: false
+    t.integer "radius_m", default: 200, null: false
+    t.jsonb "recurrence", default: {"type" => "none"}, null: false
+    t.datetime "repeat_until"
+    t.datetime "starts_at"
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["lonlat"], name: "index_reminders_on_lonlat", using: :gist
+    t.index ["user_id"], name: "index_reminders_on_user_id"
   end
 
   create_table "tags", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
@@ -70,5 +100,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_083845) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
+  add_foreign_key "reminder_tags", "reminders", on_delete: :cascade
+  add_foreign_key "reminder_tags", "tags", on_delete: :cascade
+  add_foreign_key "reminders", "users"
   add_foreign_key "tags", "users"
 end

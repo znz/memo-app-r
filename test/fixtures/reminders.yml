@@ -1,0 +1,94 @@
+# Base time of tests: 2026-01-07 12:00 (Wednesday) Asia/Tokyo
+
+lunch_medicine:
+  user: one
+  name: 昼の薬
+  description: 食後に飲む
+  memo_template: 昼の薬を飲んだ
+  memo_tags: [薬]
+  recurrence: { type: daily }
+  starts_at: 2026-01-01 09:00:00 +09:00
+  due_at: 2026-01-01 12:30:00 +09:00
+
+github_streak:
+  user: one
+  name: GitHub に草を生やす
+  recurrence: { type: daily }
+  starts_at: 2026-01-01 00:00:00 +09:00
+  due_at: 2026-01-01 23:59:00 +09:00
+
+tax_papers:
+  user: one
+  name: 確定申告の書類を集める
+  recurrence: { type: none }
+  starts_at: 2026-01-01 09:00:00 +09:00
+  due_at: 2026-01-06 18:00:00 +09:00
+
+water:
+  user: one
+  name: 水を飲む
+  recurrence: { type: after_completion, cooldown_minutes: 60, max_per_day: 8 }
+  starts_at: 2026-01-01 00:00:00 +09:00
+
+paused:
+  user: one
+  name: 一時停止中
+  enabled: false
+  recurrence: { type: daily }
+  starts_at: 2026-01-01 00:00:00 +09:00
+
+work_report:
+  user: one
+  name: 日報
+  recurrence: { type: weekly, weekdays: [1, 2, 3, 4, 5] }
+  starts_at: 2026-01-05 09:00:00 +09:00
+  due_at: 2026-01-05 19:00:00 +09:00
+
+mwf_gym:
+  user: one
+  name: ジム
+  recurrence: { type: weekly, weekdays: [1, 3, 5] }
+  starts_at: 2026-01-05 18:00:00 +09:00
+  due_at: 2026-01-05 21:00:00 +09:00
+
+second_tuesday:
+  user: one
+  name: 燃えないゴミ
+  recurrence: { type: monthly, nth: 2, weekday: 2 }
+  starts_at: 2026-01-01 06:00:00 +09:00
+  due_at: 2026-01-01 08:30:00 +09:00
+
+recorded_show:
+  user: one
+  name: 録画を見る
+  recurrence: { type: daily }
+  starts_at: 2026-01-01 00:00:00 +09:00
+  repeat_until: 2026-01-10 23:59:00 +09:00
+
+archived_hobby:
+  user: one
+  name: 休止中の趣味
+  recurrence: { type: daily }
+  starts_at: 2026-01-01 00:00:00 +09:00
+
+near_station:
+  user: one
+  name: 駅前で買い物
+  recurrence: { type: none }
+  starts_at: 2026-01-01 00:00:00 +09:00
+  lonlat: POINT(139.7671 35.6817)
+  radius_m: 200
+
+far_shinjuku:
+  user: one
+  name: 新宿で買い物
+  recurrence: { type: none }
+  starts_at: 2026-01-01 00:00:00 +09:00
+  lonlat: POINT(139.7006 35.6896)
+  radius_m: 200
+
+others_reminder:
+  user: two
+  name: 他人のリマインダー
+  recurrence: { type: daily }
+  starts_at: 2026-01-01 00:00:00 +09:00

@@ -1,0 +1,11 @@
+work_report_work:
+  reminder: work_report
+  tag: work
+
+lunch_medicine_health:
+  reminder: lunch_medicine
+  tag: health
+
+archived_hobby_archived:
+  reminder: archived_hobby
+  tag: archived

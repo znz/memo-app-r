@@ -7,4 +7,5 @@ class User < ApplicationRecord
   devise(:confirmable, :database_authenticatable, :lockable, :recoverable, :rememberable, :timeoutable, :trackable, :validatable)
   has_many :memos, dependent: :destroy
   has_many :tags, dependent: :destroy
+  has_many :reminders, dependent: :destroy
 end
