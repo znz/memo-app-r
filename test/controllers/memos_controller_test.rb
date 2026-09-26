@@ -22,6 +22,11 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "should get index ignoring search conditions on the user association" do
+    get memos_url(q: { user_email_cont: "x", user_id_eq: users(:two).id, s: "user_email asc" })
+    assert_response :success
+  end
+
   test "should get new" do
     get new_memo_url
     assert_response :success

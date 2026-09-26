@@ -7,13 +7,13 @@ class Memo < ApplicationRecord
   NEARBY_REMINDERS_WITHIN = 30.minutes
 
   acts_as_taggable_array_on :tags
+  belongs_to :user
 
   # Distinct tags of the memos of the user (all_tags ignores the current scope)
   def self.all_tags_for(user)
     user_id = user.id
     all_tags { where(user_id: user_id) }
   end
-  belongs_to :user
 
   # Nearby reminders are shown on a memo with location just after its creation
   def nearby_reminders_visible?(now = Time.current)
@@ -38,11 +38,12 @@ class Memo < ApplicationRecord
   }
 
   def self.ransackable_attributes(_auth_object = nil)
-    ["content", "create_from", "created_at", "created_on", "hostname", "id", "info", "lonlat", "price", "tags", "updated_at", "user_agent", "user_id"]
+    ["content", "create_from", "created_at", "created_on", "hostname", "id", "info", "lonlat", "price", "tags", "updated_at", "user_agent"]
   end
 
+  # Memos are always searched within current_user.memos, so the user is not searchable
   def self.ransackable_associations(_auth_object = nil)
-    ["user"]
+    []
   end
 
   def self.ransackable_scopes(_auth_object = nil)
