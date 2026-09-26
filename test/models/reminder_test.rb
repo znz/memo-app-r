@@ -341,8 +341,7 @@ class ReminderTest < ActiveSupport::TestCase
     reminder = reminders(:water)
     previous = Time.zone.local(2026, 1, 7, 10, 0, 5, 123456)
     reminder.update!(last_completed_at: previous, completed_count: 3)
-    token = reminder.undo_token
-    reminder.complete!(at(2026, 1, 7, 12, 0))
+    token = reminder.complete!(at(2026, 1, 7, 12, 0))
     assert reminder.undo_complete!(token)
     reminder.reload
     assert_equal previous, reminder.last_completed_at
@@ -351,19 +350,30 @@ class ReminderTest < ActiveSupport::TestCase
 
   test "undo_complete! restores a reminder never completed" do
     reminder = reminders(:water)
-    token = reminder.undo_token
-    reminder.complete!(at(2026, 1, 7, 12, 0))
+    token = reminder.complete!(at(2026, 1, 7, 12, 0))
     assert reminder.undo_complete!(token)
     reminder.reload
     assert_nil reminder.last_completed_at
     assert_equal 0, reminder.completed_count
   end
 
+  test "undo token is rejected once the completion is changed" do
+    reminder = reminders(:water)
+    token = reminder.complete!(at(2026, 1, 7, 12, 0))
+    assert reminder.undo_complete!(token)
+    assert_not reminder.undo_complete!(token)
+    reminder.complete!(at(2026, 1, 7, 12, 10))
+    reminder.complete!(at(2026, 1, 7, 12, 20))
+    assert_not reminder.undo_complete!(token)
+    reminder.reload
+    assert_equal 2, reminder.completed_count
+    assert_equal at(2026, 1, 7, 12, 20), reminder.last_completed_at
+  end
+
   test "undo token expires" do
     reminder = reminders(:water)
     travel_to(at(2026, 1, 7, 12, 0)) do
-      token = reminder.undo_token
-      reminder.complete!
+      token = reminder.complete!
       travel 61.minutes
       assert_not reminder.undo_complete!(token)
     end
@@ -371,7 +381,7 @@ class ReminderTest < ActiveSupport::TestCase
   end
 
   test "undo token of another reminder is rejected" do
-    token = reminders(:github_streak).undo_token
+    token = reminders(:github_streak).complete!(at(2026, 1, 7, 12, 0))
     reminder = reminders(:water)
     reminder.complete!(at(2026, 1, 7, 12, 0))
     assert_not reminder.undo_complete!(token)
@@ -380,8 +390,7 @@ class ReminderTest < ActiveSupport::TestCase
 
   test "tampered or blank undo token is rejected" do
     reminder = reminders(:water)
-    token = reminder.undo_token
-    reminder.complete!(at(2026, 1, 7, 12, 0))
+    token = reminder.complete!(at(2026, 1, 7, 12, 0))
     assert_not reminder.undo_complete!("#{token}x")
     assert_not reminder.undo_complete!(token.reverse)
     assert_not reminder.undo_complete!("")

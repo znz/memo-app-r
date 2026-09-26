@@ -101,8 +101,11 @@ class Reminder < ApplicationRecord
     (last_completed_at&.to_date == time.in_time_zone.to_date) ? completed_count : 0
   end
 
+  # Returns a signed token to undo this completion (valid for UNDO_EXPIRES_IN while the completion is not changed)
   def complete!(now = Time.current)
+    before = completion_state
     update!(completed_count: completed_count_on(now) + 1, last_completed_at: now)
+    undo_token(before)
   end
 
   # Attributes of the new memo made after the completion
@@ -110,19 +113,18 @@ class Reminder < ApplicationRecord
     { content: memo_template.presence || name, tags: memo_tags }
   end
 
-  # Signed token to restore the state before the completion
-  def undo_token
-    payload = { "id" => id, "last_completed_at" => last_completed_at&.iso8601(6), "completed_count" => completed_count }
-    self.class.undo_verifier.generate(payload, expires_in: UNDO_EXPIRES_IN, purpose: :undo_complete)
-  end
-
-  # Returns true when restored, false when the token is invalid, expired or for another reminder
+  # Returns true when restored, false when the token is invalid, expired, for another reminder
+  # or the completion was changed after the token was made (already undone or completed again)
   def undo_complete!(token)
     payload = token.present? && self.class.undo_verifier.verified(token, purpose: :undo_complete)
     return false unless payload.is_a?(Hash) && payload["id"] == id
 
-    last_completed_at = payload["last_completed_at"] && Time.zone.iso8601(payload["last_completed_at"])
-    update!(last_completed_at:, completed_count: payload["completed_count"])
+    with_lock do
+      next false unless completion_state.all? { |key, value| payload["expected_#{key}"] == value }
+
+      last_completed_at = payload["last_completed_at"] && Time.zone.iso8601(payload["last_completed_at"])
+      update!(last_completed_at:, completed_count: payload["completed_count"])
+    end
   end
 
   # No windows: starts_at enables, repeat_until ends, and only the one hour rule makes it urgent.
@@ -171,6 +173,16 @@ class Reminder < ApplicationRecord
     else
       Status.new(state: :active, starts_at: start, ends_at:)
     end
+  end
+
+  private def completion_state
+    { "last_completed_at" => last_completed_at&.iso8601(6), "completed_count" => completed_count }
+  end
+
+  # The state to restore and the state expected when undoing (the current state just after the completion)
+  private def undo_token(before)
+    payload = { "id" => id, **before, **completion_state.transform_keys { "expected_#{it}" } }
+    self.class.undo_verifier.generate(payload, expires_in: UNDO_EXPIRES_IN, purpose: :undo_complete)
   end
 
   private def clear_coordinates_assigned

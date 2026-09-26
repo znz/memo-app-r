@@ -288,8 +288,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
 
   test "should not undo the completion with an expired token" do
     reminder = reminders(:water)
-    token = travel_to(2.hours.ago) { reminder.undo_token }
-    reminder.complete!
+    token = travel_to(2.hours.ago) { reminder.complete! }
 
     post undo_complete_reminder_url(reminder), params: { token: }
 
@@ -300,8 +299,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
 
   test "should not undo the completion with a tampered or missing token" do
     reminder = reminders(:water)
-    token = reminder.undo_token
-    reminder.complete!
+    token = reminder.complete!
 
     post undo_complete_reminder_url(reminder), params: { token: token.sub(/--\h/) { it.succ } }
     assert_predicate flash[:alert], :present?
@@ -314,8 +312,27 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, reminder.reload.completed_count
   end
 
+  test "should not undo the completion with a token already used" do
+    reminder = reminders(:water)
+    post complete_reminder_url(reminder)
+    token = flash[:undo]["token"]
+    post undo_complete_reminder_url(reminder), params: { token: }
+    assert_equal 0, reminder.reload.completed_count
+    travel 1.minute
+    post complete_reminder_url(reminder)
+    travel 1.minute
+    post complete_reminder_url(reminder)
+    assert_equal 2, reminder.reload.completed_count
+
+    post undo_complete_reminder_url(reminder), params: { token: }
+
+    assert_redirected_to new_memo_url
+    assert_predicate flash[:alert], :present?
+    assert_equal 2, reminder.reload.completed_count
+  end
+
   test "should not undo the completion with a token of another reminder" do
-    token = reminders(:lunch_medicine).undo_token
+    token = reminders(:lunch_medicine).complete!
     reminder = reminders(:water)
     reminder.complete!
 
@@ -333,8 +350,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
 
   test "should not undo the completion of another user's reminder" do
     other = reminders(:others_reminder)
-    token = other.undo_token
-    other.complete!
+    token = other.complete!
 
     post undo_complete_reminder_url(other), params: { token: }
 

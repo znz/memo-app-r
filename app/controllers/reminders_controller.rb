@@ -45,8 +45,7 @@ class RemindersController < ApplicationController
 
   # Goes to a new memo prefilled from the reminder, with a button to undo in the flash
   def complete
-    token = @reminder.undo_token
-    @reminder.complete!
+    token = @reminder.complete!
     redirect_to new_memo_path(reminder_id: @reminder.to_param), notice: t(".success", name: @reminder.name),
       flash: { undo: { "path" => undo_complete_reminder_path(@reminder), "token" => token } }
   end
