@@ -1,0 +1,48 @@
+- now = Time.current
+- schedule = @reminder.schedule
+h1 = @reminder.name
+
+dl.row
+  dt.col-sm-3 = Reminder.human_attribute_name(:tags)
+  dd.col-sm-9
+    - @reminder.tags.each do |tag_record|
+      =< theme_badge tag_record.name, tag_record.color
+  dt.col-sm-3 = Reminder.human_attribute_name(:description)
+  dd.col-sm-9 = simple_format @reminder.description
+  dt.col-sm-3 = Reminder.human_attribute_name(:memo_template)
+  dd.col-sm-9.arib-font = simple_format @reminder.memo_template
+  dt.col-sm-3 = Reminder.human_attribute_name(:memo_tags)
+  dd.col-sm-9
+    ul.list-unstyled
+      - @reminder.memo_tags.each do |memo_tag|
+        li = memo_tag
+  dt.col-sm-3 = Reminder.human_attribute_name(:enabled)
+  dd.col-sm-9 = @reminder.enabled? ? t(:'.enabled') : t(:'.disabled')
+  dt.col-sm-3 = t(:'.state')
+  dd.col-sm-9 = reminder_state_label(@reminder, now)
+  - %i[starts_at due_at repeat_until].each do |attribute|
+    dt.col-sm-3 = Reminder.human_attribute_name(attribute)
+    dd.col-sm-9 = @reminder[attribute] && l(@reminder[attribute], format: :long)
+  dt.col-sm-3 = Reminder.human_attribute_name(:recurrence)
+  dd.col-sm-9 = recurrence_label(@reminder)
+  dt.col-sm-3 = Reminder.human_attribute_name(:recurrence_json)
+  dd.col-sm-9
+    pre.reminder-json = JSON.pretty_generate(@reminder.recurrence)
+  - if @reminder.rule.windowed?
+    - { current_window: schedule.window_at(now), next_window: schedule.next_window_after(now) }.each do |key, window|
+      dt.col-sm-3 = t(".#{key}")
+      dd.col-sm-9
+        - if window
+          = t(:'.window', starts_at: l(window.starts_at, format: :long), ends_at: (l(window.ends_at - 1.minute, format: :long) if window.ends_at))
+  - if @reminder.lonlat
+    dt.col-sm-3 = Reminder.human_attribute_name(:lonlat)
+    dd.col-sm-9 = t(:'.location', latitude: @reminder.latitude, longitude: @reminder.longitude, radius: @reminder.radius_m)
+  dt.col-sm-3 = Reminder.human_attribute_name(:last_completed_at)
+  dd.col-sm-9 = @reminder.last_completed_at && l(@reminder.last_completed_at, format: :long)
+  dt.col-sm-3 = t(:'.completed_today')
+  dd.col-sm-9 = @reminder.completed_count_on(now)
+
+.d-flex.align-items-center
+  => link_to t(:'.edit'), edit_reminder_path(@reminder), accesskey: 'E'
+  = button_to t(:'.destroy'), @reminder, method: :delete, class: 'btn btn-link', form_class: 'mb-0', form: { data: { turbo_confirm: t(:'.confirm_destroy') } }
+  = link_to t(:'.back'), reminders_path, accesskey: 'B'

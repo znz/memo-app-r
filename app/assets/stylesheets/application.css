@@ -25,3 +25,7 @@
 pre {
   line-height: 0.55;
 }
+
+.reminder-json {
+  line-height: normal;
+}

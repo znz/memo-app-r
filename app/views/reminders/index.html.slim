@@ -1,0 +1,28 @@
+h1 = t(:'.title')
+
+- now = Time.current
+table.table
+  thead
+    tr
+      th = Reminder.human_attribute_name(:name)
+      th = Reminder.human_attribute_name(:tags)
+      th = Reminder.human_attribute_name(:recurrence)
+      th = t(:'.state')
+      th = Reminder.human_attribute_name(:last_completed_at)
+      th = Reminder.human_attribute_name(:enabled)
+      th
+  tbody
+    - @reminders.each do |reminder|
+      tr id=dom_id(reminder)
+        td = link_to reminder.name, reminder
+        td
+          - reminder.tags.each do |tag_record|
+            =< theme_badge tag_record.name, tag_record.color
+        td = recurrence_label(reminder)
+        td = reminder_state_label(reminder, now)
+        td = reminder.last_completed_at && l(reminder.last_completed_at, format: :short)
+        td = reminder.enabled? ? t(:'.enabled') : t(:'.disabled')
+        td
+          = link_to t(:'.edit'), edit_reminder_path(reminder)
+
+= link_to t(:'.new'), new_reminder_path, accesskey: 'N'

@@ -7,5 +7,6 @@ nav.navbar.navbar-expand-md.navbar-light.bg-light.mb-4
     ul.navbar-nav.mr-auto
       = nav_link_to t(:'nav.home'), root_path, link_options: { accesskey: 'L' }
       = nav_link_to t(:'nav.new_memo'), new_memo_path, link_options: { accesskey: 'N' }
+      = nav_link_to t(:'nav.reminders'), reminders_path
       = nav_link_to t(:'nav.tags'), tags_path
       = nav_link_to t(:'nav.about'), about_path

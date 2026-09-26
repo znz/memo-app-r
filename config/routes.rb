@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", :as => :rails_health_check
 
   resources :memos
+  resources :reminders
   resources :tags, except: :show
   devise_for :users
   get "pages/about", as: :about

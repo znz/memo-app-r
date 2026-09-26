@@ -1,0 +1,25 @@
+= simple_form_for(@reminder) do |f|
+  = f.error_notification
+  = f.error_notification message: f.object.errors[:base].to_sentence if f.object.errors[:base].present?
+
+  .form-inputs
+    = f.input :name, autofocus: true
+    = f.input :description, input_html: { rows: 2 }
+    = f.input :memo_template, input_html: { rows: 3, class: 'arib-font' }
+    = f.input :memo_tags, as: :check_boxes, collection: memo_tag_candidates(@reminder.memo_tags), wrapper: :vertical_collection_inline
+    .form-group.string.optional
+      label.form-control-label.string.optional for='reminder_new_memo_tag'
+        = t(:'.new_memo_tag')
+      = text_field_tag 'reminder[memo_tags][]', nil, id: 'reminder_new_memo_tag', class: 'form-control string optional'
+    = f.association :tags, as: :check_boxes, collection: current_user.tags.order(:name), wrapper: :vertical_collection_inline
+    = f.input :enabled
+    - %i[starts_at due_at repeat_until].each do |attribute|
+      = f.input attribute, as: :datetime, html5: true, wrapper: :vertical_form, input_html: { include_seconds: false }
+    = f.input :recurrence_preset, collection: recurrence_preset_options, include_blank: (t(:'.recurrence_unchanged') if @reminder.persisted?)
+    = f.input :recurrence_json, as: :text, input_html: { rows: 4, class: 'text-monospace' }
+    = f.input :latitude, as: :float
+    = f.input :longitude, as: :float
+    = f.input :radius_m
+
+  .form-actions
+    = f.button :submit, class: 'btn btn-primary'
