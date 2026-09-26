@@ -196,6 +196,17 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_equal Time.zone.local(2026, 1, 5, 19, 0), @reminder.reload.due_at
   end
 
+  test "should keep the JSON of the saved rule when an update with a preset fails" do
+    patch reminder_url(@reminder), params: { reminder: {
+      name: "", recurrence_preset: "daily", recurrence_json: JSON.pretty_generate(@reminder.recurrence)
+    } }
+
+    assert_response :unprocessable_content
+    assert_select ".reminder_name .invalid-feedback"
+    assert_select "select[name=?] option[selected][value=daily]", "reminder[recurrence_preset]"
+    assert_select "textarea[name=?]", "reminder[recurrence_json]", text: JSON.pretty_generate(@reminder.recurrence)
+  end
+
   test "should destroy reminder" do
     assert_difference(["Reminder.count", "ReminderTag.count"], -1) do
       delete reminder_url(@reminder)
@@ -364,5 +375,16 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
 
     get reminder_url(@reminder)
     assert_select "form[action=?] button.btn-outline-success", complete_reminder_path(@reminder), "完了"
+  end
+
+  test "index and show have no button to complete a reminder that is not actionable" do
+    paused = reminders(:paused)
+    get reminders_url
+    assert_select "tr##{ActionView::RecordIdentifier.dom_id(paused)}"
+    assert_select "form[action=?]", complete_reminder_path(paused), count: 0
+
+    get reminder_url(paused)
+    assert_response :success
+    assert_select "form[action=?]", complete_reminder_path(paused), count: 0
   end
 end

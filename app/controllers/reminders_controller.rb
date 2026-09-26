@@ -16,9 +16,8 @@ class RemindersController < ApplicationController
     @reminder.assign_attributes(location_params)
   end
 
-  # The rule is shown as JSON to be edited
   def edit
-    @reminder.recurrence_json = JSON.pretty_generate(@reminder.recurrence)
+    fill_recurrence_json
   end
 
   def create
@@ -34,6 +33,7 @@ class RemindersController < ApplicationController
     if @reminder.update(update_params)
       redirect_to @reminder, notice: t(".success")
     else
+      fill_recurrence_json
       render :edit, status: :unprocessable_content
     end
   end
@@ -69,6 +69,11 @@ class RemindersController < ApplicationController
       :name, :description, :memo_template, :enabled, :starts_at, :due_at, :repeat_until,
       :recurrence_preset, :recurrence_json, :latitude, :longitude, :radius_m, memo_tags: [], tag_ids: []
     ])
+  end
+
+  # The edit form shows the saved rule as JSON to be edited (unless JSON is given)
+  def fill_recurrence_json
+    @reminder.recurrence_json = JSON.pretty_generate(@reminder.recurrence_in_database) if @reminder.recurrence_json.blank?
   end
 
   # The edit form shows the current rule as JSON: a chosen preset wins over the JSON left as is
