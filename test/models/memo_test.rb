@@ -21,4 +21,14 @@ class MemoTest < ActiveSupport::TestCase
     assert_equal memo, Memo.find_uuid(memo.id)
     assert_equal memo, Memo.find_uuid(memo.to_param)
   end
+
+  test "nearby reminders are visible within 30 minutes after creation of a memo with location" do
+    now = Time.zone.local(2026, 1, 7, 12, 0)
+    memo = Memo.new(lonlat: "POINT(139.7671 35.6812)", created_at: now - 30.minutes)
+    assert memo.nearby_reminders_visible?(now)
+    memo.created_at = now - 31.minutes
+    assert_not memo.nearby_reminders_visible?(now)
+    memo = Memo.new(lonlat: nil, created_at: now)
+    assert_not memo.nearby_reminders_visible?(now)
+  end
 end

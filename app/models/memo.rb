@@ -4,8 +4,15 @@
 class Memo < ApplicationRecord
   include Base58Uuid
 
+  NEARBY_REMINDERS_WITHIN = 30.minutes
+
   acts_as_taggable_array_on :tags
   belongs_to :user
+
+  # Nearby reminders are shown on a memo with location just after its creation
+  def nearby_reminders_visible?(now = Time.current)
+    lonlat.present? && created_at.present? && created_at >= now - NEARBY_REMINDERS_WITHIN
+  end
 
   private def validate_tags
     if !tags.is_a?(Array) || tags.any?(&:blank?)

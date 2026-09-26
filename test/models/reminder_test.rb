@@ -358,4 +358,68 @@ class ReminderTest < ActiveSupport::TestCase
     assert_not reminder.undo_complete!(nil)
     assert_equal 1, reminder.reload.completed_count
   end
+
+  # coordinates
+
+  test "latitude and longitude are read from lonlat" do
+    reminder = reminders(:near_station)
+    assert_in_delta 35.6817, reminder.latitude
+    assert_in_delta 139.7671, reminder.longitude
+    assert_nil reminders(:water).latitude
+    assert_nil reminders(:water).longitude
+  end
+
+  test "latitude and longitude are written to lonlat" do
+    reminder = new_reminder(latitude: "35.68", longitude: "139.76")
+    reminder.save!
+    reminder = Reminder.find(reminder.id)
+    assert_in_delta 35.68, reminder.lonlat.y
+    assert_in_delta 139.76, reminder.lonlat.x
+  end
+
+  test "blank latitude and longitude clear lonlat" do
+    reminder = reminders(:near_station)
+    reminder.update!(latitude: "", longitude: "")
+    assert_nil reminder.reload.lonlat
+  end
+
+  test "latitude and longitude keep lonlat when not assigned" do
+    reminder = reminders(:near_station)
+    reminder.update!(name: "駅前")
+    assert_in_delta 35.6817, reminder.reload.lonlat.y
+  end
+
+  test "latitude without longitude is invalid" do
+    reminder = new_reminder(latitude: "35.68", longitude: "")
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:latitude, :pair)
+  end
+
+  test "coordinates out of range are invalid" do
+    reminder = new_reminder(latitude: "91", longitude: "181")
+    assert_not reminder.valid?
+    assert reminder.errors.include?(:latitude)
+    assert reminder.errors.include?(:longitude)
+    reminder = new_reminder(latitude: "north", longitude: "139.76")
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:latitude, :not_a_number)
+  end
+
+  test "near returns reminders within their radius ordered by distance" do
+    closer = new_reminder(name: "改札", lonlat: "POINT(139.7671 35.6813)")
+    closer.save!
+    reminders = Reminder.near(Memo.new(lonlat: "POINT(139.7671 35.6812)").lonlat).to_a
+    assert_equal [closer, reminders(:near_station)], reminders
+    assert_in_delta 11, reminders.first[:distance_m], 2
+    assert_in_delta 56, reminders.last[:distance_m], 2
+  end
+
+  test "near respects the radius of each reminder" do
+    reminders(:near_station).update!(radius_m: 50)
+    assert_empty Reminder.near(Memo.new(lonlat: "POINT(139.7671 35.6812)").lonlat).to_a
+  end
+
+  test "near nil is empty" do
+    assert_empty Reminder.near(nil).to_a
+  end
 end

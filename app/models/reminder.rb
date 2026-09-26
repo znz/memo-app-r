@@ -14,20 +14,39 @@ class Reminder < ApplicationRecord
 
   attribute :recurrence_preset, :string
   attribute :recurrence_json, :string
+  attribute :latitude, :float
+  attribute :longitude, :float
 
   normalizes :memo_tags, with: ->(tags) { Array(tags).compact_blank.uniq }, apply_to_nil: true
 
   before_validation :assign_recurrence_input
+  before_validation :assign_lonlat
 
   validates :name, presence: true
   validates :radius_m, numericality: { only_integer: true, greater_than: 0 }
   validates :starts_at, presence: true, if: -> { valid_rule&.windowed? }
+  validates :latitude, numericality: { in: -90..90 }, allow_nil: true
+  validates :longitude, numericality: { in: -180..180 }, allow_nil: true
+  validate :coordinates_must_be_paired
   validate :recurrence_must_be_valid
   validate :recurrence_input_must_be_valid
   validate :times_must_be_ordered
   validate :tags_must_be_owned
 
   scope :enabled, -> { where(enabled: true) }
+
+  NEAR_POINT_SQL = "ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography"
+
+  # Reminders whose radius contains the point, nearest first, with distance_m (read it by reminder[:distance_m]).
+  # Do not call count on this relation: use to_a.size or count(:all).
+  scope :near, ->(point) {
+    return none if point.nil?
+
+    binds = { lon: point.x, lat: point.y }
+    where("ST_DWithin(reminders.lonlat, #{NEAR_POINT_SQL}, reminders.radius_m)", binds)
+      .select("reminders.*", sanitize_sql_array(["ST_Distance(reminders.lonlat, #{NEAR_POINT_SQL}) AS distance_m", binds]))
+      .order(Arel.sql("distance_m"))
+  }
 
   def self.undo_verifier = Rails.application.message_verifier(:reminder_undo)
 
@@ -38,6 +57,21 @@ class Reminder < ApplicationRecord
       @rule_source = recurrence.deep_dup
     end
     @rule
+  end
+
+  # Virtual attributes of the form: read from lonlat unless assigned, and written to lonlat before validation
+  def latitude = @latitude_assigned ? super : lonlat&.y
+
+  def longitude = @longitude_assigned ? super : lonlat&.x
+
+  def latitude=(value)
+    @latitude_assigned = true
+    super
+  end
+
+  def longitude=(value)
+    @longitude_assigned = true
+    super
   end
 
   def schedule
@@ -128,6 +162,20 @@ class Reminder < ApplicationRecord
     else
       Status.new(state: :active, starts_at: start, ends_at:)
     end
+  end
+
+  private def assign_lonlat
+    return unless @latitude_assigned || @longitude_assigned
+
+    if latitude.nil? && longitude.nil?
+      self.lonlat = nil
+    elsif latitude && longitude && (-90..90).cover?(latitude) && (-180..180).cover?(longitude)
+      self.lonlat = "POINT(#{longitude} #{latitude})"
+    end
+  end
+
+  private def coordinates_must_be_paired
+    errors.add(:latitude, :pair) if latitude.nil? != longitude.nil?
   end
 
   private def valid_rule
