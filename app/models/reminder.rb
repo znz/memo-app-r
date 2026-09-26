@@ -21,6 +21,7 @@ class Reminder < ApplicationRecord
 
   before_validation :assign_recurrence_input
   before_validation :assign_lonlat
+  after_save :clear_coordinates_assigned
 
   validates :name, presence: true
   validates :radius_m, numericality: { only_integer: true, greater_than: 0 }
@@ -74,6 +75,11 @@ class Reminder < ApplicationRecord
     super
   end
 
+  def reload(...)
+    clear_coordinates_assigned
+    super
+  end
+
   def schedule
     Reminder::Schedule.new(rule:, starts_at:, due_at:, repeat_until:)
   end
@@ -92,7 +98,7 @@ class Reminder < ApplicationRecord
 
   # Completions on the local date of time
   def completed_count_on(time)
-    (last_completed_at&.to_date == time.to_date) ? completed_count : 0
+    (last_completed_at&.to_date == time.in_time_zone.to_date) ? completed_count : 0
   end
 
   def complete!(now = Time.current)
@@ -119,17 +125,20 @@ class Reminder < ApplicationRecord
     update!(last_completed_at:, completed_count: payload["completed_count"])
   end
 
-  # No windows: starts_at enables, repeat_until ends, and only the one hour rule makes it urgent
+  # No windows: starts_at enables, repeat_until ends, and only the one hour rule makes it urgent.
+  # Expired also when the limit of the day or the cooldown lasts until repeat_until.
   private def after_completion_status_at(now)
     repeat_limit = schedule.repeat_limit
-    available_at = last_completed_at && (last_completed_at + rule.cooldown_minutes.minutes)
+    limit_reached = rule.max_per_day && completed_count_on(now) >= rule.max_per_day
+    cooldown_ends_at = last_completed_at && (last_completed_at + rule.cooldown_minutes.minutes)
+    available_at = [now, (now.tomorrow.beginning_of_day if limit_reached), cooldown_ends_at].compact.max
     if starts_at && now < starts_at
       Status.new(state: :waiting, starts_at:)
-    elsif repeat_limit && now >= repeat_limit
+    elsif repeat_limit && available_at >= repeat_limit
       Status.new(state: :expired)
-    elsif rule.max_per_day && completed_count_on(now) >= rule.max_per_day
-      Status.new(state: :limit_reached, starts_at: [now.tomorrow.beginning_of_day, available_at].compact.max)
-    elsif available_at && now < available_at
+    elsif limit_reached
+      Status.new(state: :limit_reached, starts_at: available_at)
+    elsif now < available_at
       Status.new(state: :cooling_down, starts_at: available_at)
     else
       Status.new(state: :active, ends_at: [(now.end_of_day if rule.max_per_day), repeat_limit].compact.min)
@@ -162,6 +171,10 @@ class Reminder < ApplicationRecord
     else
       Status.new(state: :active, starts_at: start, ends_at:)
     end
+  end
+
+  private def clear_coordinates_assigned
+    @latitude_assigned = @longitude_assigned = false
   end
 
   private def assign_lonlat

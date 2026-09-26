@@ -101,6 +101,12 @@ class ReminderTest < ActiveSupport::TestCase
     assert new_reminder(tag_ids: [tags(:work).id, tags(:health).id]).valid?
   end
 
+  test "tags of another user are rejected on update" do
+    reminder = reminders(:work_report)
+    assert_not reminder.update(tag_ids: [tags(:other_users).id])
+    assert reminder.errors.of_kind?(:tag_ids, :not_owned)
+  end
+
   test "recurrence_preset assigns the preset rule" do
     reminder = new_reminder(recurrence_preset: "weekdays")
     assert reminder.valid?
@@ -254,6 +260,22 @@ class ReminderTest < ActiveSupport::TestCase
     assert_equal :active, reminder.status_at(at(2026, 1, 8, 0, 0)).state
   end
 
+  test "after_completion expires when the limit of the day is reached on the last day" do
+    reminder = reminders(:water)
+    reminder.repeat_until = at(2026, 1, 7, 17, 59)
+    reminder.last_completed_at = at(2026, 1, 7, 10, 0)
+    reminder.completed_count = 8
+    assert_equal Reminder::Status.new(state: :expired, starts_at: nil, ends_at: nil), reminder.status_at(at(2026, 1, 7, 12, 0))
+  end
+
+  test "after_completion expires when the cooldown ends after repeat_until" do
+    reminder = reminders(:water)
+    reminder.repeat_until = at(2026, 1, 7, 12, 29)
+    reminder.last_completed_at = at(2026, 1, 7, 11, 45)
+    reminder.completed_count = 1
+    assert_equal Reminder::Status.new(state: :expired, starts_at: nil, ends_at: nil), reminder.status_at(at(2026, 1, 7, 12, 0))
+  end
+
   test "after_completion is waiting before starts_at and expires after repeat_until" do
     reminder = reminders(:water)
     reminder.starts_at = at(2026, 1, 8, 0, 0)
@@ -276,6 +298,14 @@ class ReminderTest < ActiveSupport::TestCase
     reminder.completed_count = 3
     assert_equal 3, reminder.completed_count_on(at(2026, 1, 7, 23, 59))
     assert_equal 0, reminder.completed_count_on(at(2026, 1, 8, 0, 10))
+  end
+
+  test "completed_count_on uses the local date of a time in another zone" do
+    reminder = reminders(:water)
+    reminder.last_completed_at = at(2026, 1, 7, 23, 30)
+    reminder.completed_count = 3
+    assert_equal 0, reminder.completed_count_on(Time.utc(2026, 1, 7, 15, 30))
+    assert_equal 3, reminder.completed_count_on(Time.utc(2026, 1, 7, 14, 59))
   end
 
   # completion
@@ -381,6 +411,15 @@ class ReminderTest < ActiveSupport::TestCase
     reminder = reminders(:near_station)
     reminder.update!(latitude: "", longitude: "")
     assert_nil reminder.reload.lonlat
+  end
+
+  test "latitude and longitude are read from lonlat after save and reload" do
+    reminder = reminders(:water)
+    reminder.update!(latitude: "35.68", longitude: "139.76")
+    assert_in_delta 35.68, reminder.latitude
+    reminder.reload
+    assert_in_delta 35.68, reminder.latitude
+    assert_in_delta 139.76, reminder.longitude
   end
 
   test "latitude and longitude keep lonlat when not assigned" do
