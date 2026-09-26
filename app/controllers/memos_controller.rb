@@ -10,7 +10,7 @@ class MemosController < ApplicationController
   # GET /memos
   # GET /memos.json
   def index
-    @memos = Memo.all
+    @memos = current_user.memos.all
     @q = @memos.ransack(params[:q])
     @q.sorts = "created_at desc" if @q.sorts.empty?
     @memos = @q.result
@@ -27,7 +27,7 @@ class MemosController < ApplicationController
   # GET /memos/new
   # GET /memos/new?reminder_id=... (prefilled from the completed reminder)
   def new
-    @memo = Memo.new(reminder_memo_attributes)
+    @memo = current_user.memos.new(reminder_memo_attributes)
     load_reminder_board
   end
 
@@ -38,7 +38,7 @@ class MemosController < ApplicationController
   # POST /memos
   # POST /memos.json
   def create
-    @memo = Memo.new(memo_params)
+    @memo = current_user.memos.new(memo_params)
     @memo.user = current_user
     ip = request.remote_ip
     @memo.create_from = ip
@@ -91,7 +91,7 @@ class MemosController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_memo
-    @memo = Memo.find_uuid(params[:id])
+    @memo = current_user.memos.find_uuid(params[:id])
   end
 
   def reminder_memo_attributes
