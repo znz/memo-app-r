@@ -1,0 +1,19 @@
+work:
+  user: one
+  name: 仕事
+  color: primary
+
+health:
+  user: one
+  name: 健康
+  color: success
+
+archived:
+  user: one
+  name: 休止中
+  enabled: false
+
+other_users:
+  user: two
+  name: 他人のタグ
+  color: danger
