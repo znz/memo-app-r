@@ -46,6 +46,16 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "should get new without prefill when reminder_id is not a string" do
+    reminder = reminders(:lunch_medicine)
+    [reminder.to_param, reminder.id].each do |reminder_id|
+      get new_memo_url, params: { reminder_id: [reminder_id] }
+      assert_response :success
+      assert_select "textarea[name=?]", "memo[content]", text: ""
+      assert_select "input[type=checkbox][checked][name=?]", "memo[tags][]", count: 0
+    end
+  end
+
   test "new shows urgent reminders above the form and the others below it" do
     travel_to_base_time
     get new_memo_url

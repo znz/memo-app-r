@@ -138,6 +138,21 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?] input[name=_method][value=delete]", reminder_path(reminders(:lunch_medicine))
   end
 
+  test "should show reminder with location" do
+    reminder = reminders(:near_station)
+    get reminder_url(reminder)
+    assert_response :success
+    assert_select "dd", "緯度 35.6817 経度 139.7671（半径 200m）"
+  end
+
+  test "should show after_completion reminder" do
+    reminder = reminders(:water)
+    get reminder_url(reminder)
+    assert_response :success
+    assert_select "h1", reminder.name
+    assert_select "dd", reminder.rule.label
+  end
+
   test "should get edit" do
     get edit_reminder_url(@reminder)
     assert_response :success
@@ -194,6 +209,14 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".reminder_due_at .invalid-feedback", /通知開始日時より後/
     assert_select ".reminder_latitude .invalid-feedback", /両方指定/
     assert_equal Time.zone.local(2026, 1, 5, 19, 0), @reminder.reload.due_at
+  end
+
+  test "should not update reminder with another user's tag" do
+    patch reminder_url(@reminder), params: { reminder: { tag_ids: [tags(:other_users).id] } }
+
+    assert_response :unprocessable_content
+    assert_select ".reminder_tags .invalid-feedback", /他のユーザーのタグは使えません/
+    assert_equal [tags(:work)], @reminder.reload.tags.to_a
   end
 
   test "should keep the JSON of the saved rule when an update with a preset fails" do

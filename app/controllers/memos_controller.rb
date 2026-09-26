@@ -95,9 +95,10 @@ class MemosController < ApplicationController
   end
 
   def reminder_memo_attributes
-    return {} if params[:reminder_id].blank?
+    reminder_id = params[:reminder_id]
+    return {} unless reminder_id.is_a?(String) && reminder_id.present?
 
-    current_user.reminders.find_uuid(params[:reminder_id]).memo_attributes
+    current_user.reminders.find_uuid(reminder_id).memo_attributes
   rescue ActiveRecord::RecordNotFound
     {}
   end
