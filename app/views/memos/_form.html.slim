@@ -6,7 +6,7 @@
     = f.hidden_field :info
     = f.input :content, autofocus: true, input_html: { class: 'arib-font' }
     = f.input :price
-    = f.input :tags, as: :check_boxes, collection: Memo.all_tags.sort, wrapper: :vertical_collection_inline
+    = f.input :tags, as: :check_boxes, collection: memo_tag_candidates(@memo.tags), wrapper: :vertical_collection_inline
     = f.hidden_field :lonlat
     .form-group.string.optional
       label.form-control-label.string.optional

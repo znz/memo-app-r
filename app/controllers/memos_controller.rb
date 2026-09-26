@@ -22,8 +22,9 @@ class MemosController < ApplicationController
   end
 
   # GET /memos/new
+  # GET /memos/new?reminder_id=... (prefilled from the completed reminder)
   def new
-    @memo = Memo.new
+    @memo = Memo.new(reminder_memo_attributes)
   end
 
   # GET /memos/1/edit
@@ -84,6 +85,14 @@ class MemosController < ApplicationController
   # Use callbacks to share common setup or constraints between actions.
   def set_memo
     @memo = Memo.find_uuid(params[:id])
+  end
+
+  def reminder_memo_attributes
+    return {} if params[:reminder_id].blank?
+
+    current_user.reminders.find_uuid(params[:reminder_id]).memo_attributes
+  rescue ActiveRecord::RecordNotFound
+    {}
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.

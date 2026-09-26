@@ -249,7 +249,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, reminder.completed_count
   end
 
-  test "the new memo page after completion has a button to undo" do
+  test "the new memo page after completion is prefilled and has a button to undo" do
     reminder = reminders(:lunch_medicine)
     post complete_reminder_url(reminder)
     token = flash[:undo]["token"]
@@ -261,6 +261,10 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
         assert_select "input[type=hidden][name=token][value=?]", token
         assert_select "button.btn", "取り消す"
       end
+    end
+    assert_select "form#new_memo" do
+      assert_select "textarea[name=?]", "memo[content]", text: "昼の薬を飲んだ"
+      assert_select "input[type=checkbox][checked][name=?][value=?]", "memo[tags][]", "薬"
     end
   end
 

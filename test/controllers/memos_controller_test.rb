@@ -27,6 +27,25 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "should get new prefilled from a reminder" do
+    get new_memo_url(reminder_id: reminders(:lunch_medicine).to_param)
+    assert_response :success
+    assert_select "form#new_memo" do
+      assert_select "textarea[name=?]", "memo[content]", text: "昼の薬を飲んだ"
+      assert_select "input[type=checkbox][checked][name=?][value=?]", "memo[tags][]", "薬"
+      assert_select "input[type=checkbox]:not([checked])[name=?][value=?]", "memo[tags][]", "tag1"
+    end
+  end
+
+  test "should get new without prefill from another user's or an unknown reminder" do
+    [reminders(:others_reminder).to_param, SecureRandom.uuid_v7, "0" * 22, "unknown"].each do |reminder_id|
+      get new_memo_url(reminder_id:)
+      assert_response :success
+      assert_select "textarea[name=?]", "memo[content]", text: ""
+      assert_select "input[type=checkbox][checked][name=?]", "memo[tags][]", count: 0
+    end
+  end
+
   test "should create memo" do
     assert_difference("Memo.count") do
       post memos_url, params: { memo: { content: @memo.content, create_from: @memo.create_from, info: @memo.info, price: @memo.price, tags: @memo.tags, user_id: @memo.user_id } }
