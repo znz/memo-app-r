@@ -140,6 +140,9 @@ ja:
     undo_complete:
       success: '「%{name}」の完了を取り消しました。'
       failure: '「%{name}」の完了を取り消せませんでした。取り消しは完了から1時間以内に限ります。'
+    card:
+      complete: '完了'
+      today_count: '本日 %{count}/%{max}回'
     undo:
       button: '取り消す'
     form:

@@ -3,6 +3,8 @@
 require "resolv"
 
 class MemosController < ApplicationController
+  include ReminderBoardLoading
+
   before_action :set_memo, only: %i[show edit update destroy]
 
   # GET /memos
@@ -25,6 +27,7 @@ class MemosController < ApplicationController
   # GET /memos/new?reminder_id=... (prefilled from the completed reminder)
   def new
     @memo = Memo.new(reminder_memo_attributes)
+    load_reminder_board
   end
 
   # GET /memos/1/edit
@@ -50,7 +53,10 @@ class MemosController < ApplicationController
         format.html { redirect_to @memo, notice: t(".success") }
         format.json { render :show, status: :created, location: @memo }
       else
-        format.html { render :new }
+        format.html do
+          load_reminder_board
+          render :new, status: :unprocessable_content
+        end
         format.json { render json: @memo.errors, status: :unprocessable_content }
       end
     end

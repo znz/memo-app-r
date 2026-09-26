@@ -1,5 +1,18 @@
+- now = Time.current
 h1 = t(:'.title')
 
+- if @reminder_board.urgent.any?
+  section#urgent_reminders.mb-3
+    h2.h5 = t(:'.urgent')
+    == render partial: 'reminders/card', collection: @reminder_board.urgent, as: :item, locals: { now: }
+
 == render 'form'
+
+- if @reminder_board.active.any?
+  section#active_reminders.mt-4
+    h2.h5 = t(:'.active')
+    == render partial: 'reminders/card', collection: @reminder_board.active, as: :item, locals: { now: }
+
+== render 'hidden_tags/form'
 
 = link_to 'Back', memos_path, accesskey: 'B'

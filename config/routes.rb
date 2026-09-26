@@ -13,6 +13,7 @@ Rails.application.routes.draw do
     end
   end
   resources :tags, except: :show
+  resource :hidden_tags, only: :create
   devise_for :users
   get "pages/about", as: :about
   get "ip" => "pages#ip", :as => :ip

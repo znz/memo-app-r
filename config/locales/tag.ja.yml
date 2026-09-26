@@ -35,3 +35,11 @@ ja:
       success: 'タグが更新されました。'
     destroy:
       success: 'タグが削除されました。'
+
+  hidden_tags:
+    create:
+      success: 'この端末で非表示にするタグを保存しました。'
+    form:
+      toggle: 'この端末で非表示にするタグ'
+      description: 'チェックしたタグが付いたリマインダーを、この端末の新規メモ画面に出しません。'
+      submit: '保存'

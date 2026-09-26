@@ -35,6 +35,8 @@ ja:
       total: '合計: '
     new:
       title: '新規メモ'
+      urgent: '期限が迫っているリマインダー'
+      active: 'リマインダー'
     search:
       price_not_null:
         全て: ~

@@ -1,0 +1,13 @@
+- if @hideable_tags.any?
+  .my-3
+    button.btn.btn-sm.btn-outline-secondary type="button" data-toggle="collapse" data-target="#hidden_tags_form" aria-expanded="false" aria-controls="hidden_tags_form"
+      = t(:'.toggle')
+    = form_with url: hidden_tags_path, id: 'hidden_tags_form', class: 'collapse mt-2' do |f|
+      p.small.text-muted.mb-1 = t(:'.description')
+      / Sent even when every box is unchecked to delete the cookie
+      = hidden_field_tag 'tag_ids[]', '', id: nil
+      - @hideable_tags.each do |tag_record|
+        .form-check.form-check-inline
+          = check_box_tag 'tag_ids[]', tag_record.id, hidden_tag_ids.include?(tag_record.id), id: dom_id(tag_record, :hidden), class: 'form-check-input'
+          = label_tag dom_id(tag_record, :hidden), tag_record.name, class: 'form-check-label'
+      = f.submit t(:'.submit'), class: 'btn btn-sm btn-primary'

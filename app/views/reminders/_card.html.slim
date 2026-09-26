@@ -1,0 +1,20 @@
+/ locals: item (ReminderBoard::Item), now, distance (optional, in meters)
+- reminder = item.reminder
+- status = item.status
+- max_per_day = reminder.rule.try(:max_per_day)
+.card.reminder-card.mb-2 class="border-#{card_border_color(reminder)}" id=dom_id(reminder, :card)
+  .card-body.p-2.d-flex.align-items-start
+    .flex-grow-1
+      .card-title.mb-0
+        = link_to reminder.name, reminder
+        - if status.state == :overdue
+          =< theme_badge t('reminders.states.overdue'), 'danger'
+        - elsif (remaining = remaining_time_in_words(status.ends_at, now:))
+          small.text-muted.ml-2 = remaining
+        - if max_per_day
+          small.text-muted.ml-2 = t(:'.today_count', count: reminder.completed_count_on(now), max: max_per_day)
+        - reminder.tags.each do |tag_record|
+          =< theme_badge tag_record.name, tag_record.color
+      - if reminder.description.present?
+        .small.text-muted = reminder.description
+    = button_to t(:'.complete'), complete_reminder_path(reminder), class: 'btn btn-sm btn-outline-success', form_class: 'ml-2 mb-0'
