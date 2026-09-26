@@ -108,6 +108,8 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_select "form[action=?]", reminders_path do
+      assert_select ".alert.alert-danger", "入力内容を確認してください:"
+      assert_select ".reminder_name label abbr[title=?]", "必須", "*"
       assert_select ".reminder_name .invalid-feedback"
       assert_select ".reminder_recurrence_json .invalid-feedback", /JSONとして読み取れません/
       assert_select "textarea[name=?]", "reminder[recurrence_json]", text: "{"

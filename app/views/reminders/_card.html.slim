@@ -3,7 +3,7 @@
 - status = item.status
 - max_per_day = reminder.rule.try(:max_per_day)
 .card.reminder-card.mb-2 class="border-#{card_border_color(reminder)}" id=dom_id(reminder, :card)
-  .card-body.p-2.d-flex.align-items-start
+  .card-body.d-flex.align-items-start
     .flex-grow-1
       .card-title.mb-0
         = link_to reminder.name, reminder

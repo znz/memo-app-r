@@ -29,3 +29,11 @@ pre {
 .reminder-json {
   line-height: normal;
 }
+
+.reminder-card {
+  border-left-width: .35rem !important;
+}
+
+.reminder-card .card-body {
+  padding: .5rem .75rem;
+}
