@@ -21,6 +21,7 @@ class MemosController < ApplicationController
   # GET /memos/1
   # GET /memos/1.json
   def show
+    @nearby_board = build_reminder_board(current_user.reminders.near(@memo.lonlat)) if @memo.nearby_reminders_visible?
   end
 
   # GET /memos/new

@@ -143,6 +143,7 @@ ja:
     card:
       complete: '完了'
       today_count: '本日 %{count}/%{max}回'
+      distance: '約 %{distance}m'
     undo:
       button: '取り消す'
     form:

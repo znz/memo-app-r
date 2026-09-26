@@ -15,6 +15,8 @@
           small.text-muted.ml-2 = t(:'.today_count', count: reminder.completed_count_on(now), max: max_per_day)
         - reminder.tags.each do |tag_record|
           =< theme_badge tag_record.name, tag_record.color
+        - if local_assigns[:distance]
+          small.text-muted.ml-2 = t(:'.distance', distance: distance.round)
       - if reminder.description.present?
         .small.text-muted = reminder.description
     = button_to t(:'.complete'), complete_reminder_path(reminder), class: 'btn btn-sm btn-outline-success', form_class: 'ml-2 mb-0'

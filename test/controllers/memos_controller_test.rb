@@ -163,6 +163,61 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show lists own reminders near a memo just created with location" do
+    travel_to_base_time
+    users(:two).reminders.create!(name: "他人の駅前", lonlat: "POINT(139.7671 35.6817)", starts_at: 1.day.ago)
+    memo = create_memo_with_location(created_at: 29.minutes.ago)
+    get memo_url(memo)
+
+    assert_response :success
+    assert_select "#nearby_reminders" do
+      assert_select "h2", "近くのリマインダー"
+      assert_select ".reminder-card", 1
+      assert_select ".reminder-card", text: /駅前で買い物/ do
+        assert_select "*", /約 9m/
+        assert_select "form[action=?] button", complete_reminder_path(reminders(:near_station)), "完了"
+      end
+    end
+  end
+
+  test "show does not list nearby reminders 30 minutes after the creation of the memo" do
+    travel_to_base_time
+    memo = create_memo_with_location(created_at: 31.minutes.ago)
+    get memo_url(memo)
+
+    assert_response :success
+    assert_select "#nearby_reminders", 0
+  end
+
+  test "show does not list nearby reminders of a memo without location" do
+    travel_to_base_time
+    memo = create_memo_with_location(lonlat: nil)
+    get memo_url(memo)
+
+    assert_response :success
+    assert_select "#nearby_reminders", 0
+  end
+
+  test "show tells that no reminder is near" do
+    travel_to_base_time
+    memo = create_memo_with_location(lonlat: "POINT(135.4959 34.7025)")
+    get memo_url(memo)
+
+    assert_select "#nearby_reminders .reminder-card", 0
+    assert_select "#nearby_reminders p", "近くにリマインダーはありません。"
+  end
+
+  test "show has a link to create a reminder at the location of the memo" do
+    travel_to_base_time
+    memo = create_memo_with_location(created_at: 2.hours.ago)
+    get memo_url(memo)
+
+    assert_select "a[href=?]", new_reminder_path(reminder: { latitude: 35.6817, longitude: 139.7672 }), "この位置でリマインダーを作成"
+
+    get memo_url(create_memo_with_location(lonlat: nil))
+    assert_select "a", text: "この位置でリマインダーを作成", count: 0
+  end
+
   test "should not show memo with valid random uuid_v4" do
     get memo_url(SecureRandom.uuid_v4)
     assert_response :not_found
@@ -203,6 +258,11 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
 
   # Base time of the reminder fixtures (Wednesday)
   private def travel_to_base_time = travel_to(Time.zone.local(2026, 1, 7, 12, 0))
+
+  # About 9m east of the reminder near_station
+  private def create_memo_with_location(lonlat: "POINT(139.7672 35.6817)", **attributes)
+    users(:one).memos.create!(content: "駅に着いた", create_from: "127.0.0.1", lonlat:, **attributes)
+  end
 
   # No validation of Memo fails by request parameters, so save is replaced while the block runs
   private def with_failing_memo_save

@@ -1,3 +1,12 @@
+- if @nearby_board
+  section#nearby_reminders.mb-3
+    h2.h5 = t(:'.nearby')
+    - now = Time.current
+    - @nearby_board.nearby.each do |item|
+      == render 'reminders/card', item:, now:, distance: item.reminder[:distance_m]
+    - if @nearby_board.nearby.empty?
+      p.text-muted = t(:'.no_nearby')
+
 dl.row
   dt.col-sm-3 = Memo.human_attribute_name(:created_at)
   dd.col-sm-9 = l(@memo.created_at, format: :long)
@@ -21,7 +30,10 @@ dl.row
   dt.col-sm-3 = Memo.human_attribute_name(:user_agent)
   dd.col-sm-9 = @memo.user_agent
   dt.col-sm-3 = Memo.human_attribute_name(:lonlat)
-  dd.col-sm-9 = @memo.lonlat
+  dd.col-sm-9
+    = @memo.lonlat
+    - if @memo.lonlat
+      = link_to t(:'.create_reminder_here'), new_reminder_path(reminder: { latitude: @memo.lonlat.y, longitude: @memo.lonlat.x }), class: 'btn btn-sm btn-outline-primary ml-2'
 
 => link_to 'Edit', edit_memo_path(@memo), accesskey: 'E'
 '|

@@ -37,6 +37,10 @@ ja:
       title: '新規メモ'
       urgent: '期限が迫っているリマインダー'
       active: 'リマインダー'
+    show:
+      nearby: '近くのリマインダー'
+      no_nearby: '近くにリマインダーはありません。'
+      create_reminder_here: 'この位置でリマインダーを作成'
     search:
       price_not_null:
         全て: ~
