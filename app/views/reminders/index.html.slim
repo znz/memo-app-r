@@ -22,7 +22,8 @@ table.table
         td = reminder_state_label(reminder, now)
         td = reminder.last_completed_at && l(reminder.last_completed_at, format: :short)
         td = reminder.enabled? ? t(:'.enabled') : t(:'.disabled')
-        td
-          = link_to t(:'.edit'), edit_reminder_path(reminder)
+        td.text-nowrap
+          => link_to t(:'.edit'), edit_reminder_path(reminder)
+          = button_to t(:'.complete'), complete_reminder_path(reminder), class: 'btn btn-sm btn-outline-success', form_class: 'd-inline'
 
 = link_to t(:'.new'), new_reminder_path, accesskey: 'N'

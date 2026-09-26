@@ -235,4 +235,114 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :not_found
   end
+
+  test "should complete reminder and redirect to a new memo" do
+    reminder = reminders(:lunch_medicine)
+    post complete_reminder_url(reminder)
+
+    assert_redirected_to new_memo_url(reminder_id: reminder.to_param)
+    assert_equal "「昼の薬」を完了しました。", flash[:notice]
+    assert_equal undo_complete_reminder_path(reminder), flash[:undo]["path"]
+    assert_predicate flash[:undo]["token"], :present?
+    reminder.reload
+    assert_equal Time.current, reminder.last_completed_at
+    assert_equal 1, reminder.completed_count
+  end
+
+  test "the new memo page after completion has a button to undo" do
+    reminder = reminders(:lunch_medicine)
+    post complete_reminder_url(reminder)
+    token = flash[:undo]["token"]
+    follow_redirect!
+
+    assert_response :success
+    assert_select ".alert", /「昼の薬」を完了しました。/ do
+      assert_select "form[action=?]", undo_complete_reminder_path(reminder) do
+        assert_select "input[type=hidden][name=token][value=?]", token
+        assert_select "button.btn", "取り消す"
+      end
+    end
+  end
+
+  test "should undo the completion" do
+    reminder = reminders(:water)
+    reminder.update!(last_completed_at: 2.hours.ago, completed_count: 3)
+    post complete_reminder_url(reminder)
+    token = flash[:undo]["token"]
+    follow_redirect!
+    assert_equal 4, reminder.reload.completed_count
+
+    post undo_complete_reminder_url(reminder), params: { token: }
+
+    assert_redirected_to new_memo_url
+    assert_equal "「水を飲む」の完了を取り消しました。", flash[:notice]
+    assert_nil flash[:undo]
+    reminder.reload
+    assert_equal 2.hours.ago, reminder.last_completed_at
+    assert_equal 3, reminder.completed_count
+  end
+
+  test "should not undo the completion with an expired token" do
+    reminder = reminders(:water)
+    token = travel_to(2.hours.ago) { reminder.undo_token }
+    reminder.complete!
+
+    post undo_complete_reminder_url(reminder), params: { token: }
+
+    assert_redirected_to new_memo_url
+    assert_equal "「水を飲む」の完了を取り消せませんでした。取り消しは完了から1時間以内に限ります。", flash[:alert]
+    assert_equal 1, reminder.reload.completed_count
+  end
+
+  test "should not undo the completion with a tampered or missing token" do
+    reminder = reminders(:water)
+    token = reminder.undo_token
+    reminder.complete!
+
+    post undo_complete_reminder_url(reminder), params: { token: token.sub(/--\h/) { it.succ } }
+    assert_predicate flash[:alert], :present?
+
+    post undo_complete_reminder_url(reminder)
+    assert_predicate flash[:alert], :present?
+
+    post undo_complete_reminder_url(reminder), params: { token: { "a" => "b" } }
+    assert_predicate flash[:alert], :present?
+    assert_equal 1, reminder.reload.completed_count
+  end
+
+  test "should not undo the completion with a token of another reminder" do
+    token = reminders(:lunch_medicine).undo_token
+    reminder = reminders(:water)
+    reminder.complete!
+
+    post undo_complete_reminder_url(reminder), params: { token: }
+
+    assert_predicate flash[:alert], :present?
+    assert_equal 1, reminder.reload.completed_count
+  end
+
+  test "should not complete another user's reminder" do
+    post complete_reminder_url(reminders(:others_reminder))
+    assert_response :not_found
+    assert_nil reminders(:others_reminder).reload.last_completed_at
+  end
+
+  test "should not undo the completion of another user's reminder" do
+    other = reminders(:others_reminder)
+    token = other.undo_token
+    other.complete!
+
+    post undo_complete_reminder_url(other), params: { token: }
+
+    assert_response :not_found
+    assert_equal 1, other.reload.completed_count
+  end
+
+  test "index and show have buttons to complete" do
+    get reminders_url
+    assert_select "tr##{ActionView::RecordIdentifier.dom_id(@reminder)} form[action=?] button.btn-outline-success", complete_reminder_path(@reminder), "完了"
+
+    get reminder_url(@reminder)
+    assert_select "form[action=?] button.btn-outline-success", complete_reminder_path(@reminder), "完了"
+  end
 end

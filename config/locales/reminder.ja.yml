@@ -107,6 +107,7 @@ ja:
       disabled: '無効'
       edit: '編集'
       new: '新規リマインダー'
+      complete: '完了'
     show:
       state: '状態'
       enabled: '有効'
@@ -116,6 +117,7 @@ ja:
       window: '%{starts_at} 〜 %{ends_at}'
       location: '緯度 %{latitude} 経度 %{longitude}（半径 %{radius}m）'
       completed_today: '本日の完了回数'
+      complete: '完了'
       edit: '編集'
       destroy: '削除'
       confirm_destroy: 'このリマインダーを削除しますか？'
@@ -133,6 +135,13 @@ ja:
       success: 'リマインダーが更新されました。'
     destroy:
       success: 'リマインダーが削除されました。'
+    complete:
+      success: '「%{name}」を完了しました。'
+    undo_complete:
+      success: '「%{name}」の完了を取り消しました。'
+      failure: '「%{name}」の完了を取り消せませんでした。取り消しは完了から1時間以内に限ります。'
+    undo:
+      button: '取り消す'
     form:
       new_memo_tag: 'メモに付ける新規タグ'
       recurrence_unchanged: '（変更しない）'

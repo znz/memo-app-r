@@ -2,7 +2,7 @@
 
 # Reminders of the current user
 class RemindersController < ApplicationController
-  before_action :set_reminder, only: %i[show edit update destroy]
+  before_action :set_reminder, only: %i[show edit update destroy complete undo_complete]
 
   def index
     @reminders = current_user.reminders.includes(:tags).order(:name)
@@ -41,6 +41,22 @@ class RemindersController < ApplicationController
   def destroy
     @reminder.destroy!
     redirect_to reminders_path, notice: t(".success"), status: :see_other
+  end
+
+  # Goes to a new memo prefilled from the reminder, with a button to undo in the flash
+  def complete
+    token = @reminder.undo_token
+    @reminder.complete!
+    redirect_to new_memo_path(reminder_id: @reminder.to_param), notice: t(".success", name: @reminder.name),
+      flash: { undo: { "path" => undo_complete_reminder_path(@reminder), "token" => token } }
+  end
+
+  def undo_complete
+    if @reminder.undo_complete!(params[:token].to_s)
+      redirect_to new_memo_path, notice: t(".success", name: @reminder.name)
+    else
+      redirect_to new_memo_path, alert: t(".failure", name: @reminder.name)
+    end
   end
 
   private

@@ -2,5 +2,9 @@
   .alert.alert-danger role="alert"
     = flash[:alert]
 - if flash[:notice]
-  .alert.alert-warning role="alert"
-    = flash[:notice]
+  .alert.alert-warning.d-flex.align-items-center role="alert"
+    span = flash[:notice]
+    / Set by RemindersController#complete (keys are strings as the flash is stored in the session as JSON)
+    - undo = flash[:undo]
+    - if undo.is_a?(Hash)
+      = button_to t(:'reminders.undo.button'), undo["path"], params: { token: undo["token"] }, class: 'btn btn-sm btn-outline-dark', form_class: 'ml-auto mb-0'
