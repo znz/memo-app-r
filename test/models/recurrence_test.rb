@@ -308,6 +308,14 @@ class RecurrenceTest < ActiveSupport::TestCase
     assert_equal at(2028, 1, 30, 9, 0), rule.occurrence_at_or_before(at(2033, 1, 29, 9, 0), anchor:)
   end
 
+  test "monthly fifth weekday with an interval that does not divide the 28-year cycle" do
+    rule = build(type: "monthly", interval: 20, nth: 5, weekday: 1)
+    anchor = at(2026, 2, 1, 9, 0)
+    assert_equal at(2054, 6, 29, 9, 0), rule.occurrence_after(anchor, anchor:)
+    assert_equal at(2054, 6, 29, 9, 0), rule.occurrence_at_or_before(at(2054, 6, 29, 9, 0), anchor:)
+    assert_nil rule.occurrence_at_or_before(at(2054, 6, 29, 8, 59), anchor:)
+  end
+
   test "monthly occurrence before the anchor in the first month is skipped" do
     rule = build(type: "monthly", day: 15)
     anchor = at(2026, 1, 20, 9, 0)

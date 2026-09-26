@@ -37,11 +37,14 @@ class Recurrence::Monthly < Recurrence::IntervalRule
     value
   end
 
-  # Candidates are months from the anchor, searched up to `interval * 2 + 12` months for a day,
-  # or up to NTH_SEARCH_MONTHS for the nth weekday (a fifth weekday can be missing for years)
+  # Candidates are months from the anchor, searched up to `interval * 2 + 12` months for a day.
+  # For the nth weekday (a fifth weekday can be missing for years) the search covers a whole
+  # NTH_SEARCH_MONTHS cycle even when the interval does not divide it (lcm / interval steps).
   private def estimated_index(time, anchor) = ((time.year - anchor.year) * 12 + time.month - anchor.month).div(interval)
 
-  private def search_count = (nth ? NTH_SEARCH_MONTHS : interval * 2 + 12).div(interval) + 1
+  private def search_count
+    nth ? NTH_SEARCH_MONTHS / NTH_SEARCH_MONTHS.gcd(interval) + 1 : (interval * 2 + 12).div(interval) + 1
+  end
 
   private def occurrence(anchor, index)
     month = anchor.advance(months: index * interval)
