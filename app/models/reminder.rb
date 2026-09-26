@@ -34,6 +34,10 @@ class Reminder < ApplicationRecord
     @rule
   end
 
+  def schedule
+    Reminder::Schedule.new(rule:, starts_at:, due_at:, repeat_until:)
+  end
+
   private def valid_rule
     rule
   rescue Recurrence::InvalidRule

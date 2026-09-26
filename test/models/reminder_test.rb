@@ -170,4 +170,9 @@ class ReminderTest < ActiveSupport::TestCase
     assert_equal reminder, found
     assert_equal [tags(:work)], found.tags.to_a
   end
+
+  test "schedule is built from the attributes" do
+    window = reminders(:lunch_medicine).schedule.window_at(at(2026, 1, 7, 12, 0))
+    assert_equal Reminder::Schedule::Window.new(starts_at: at(2026, 1, 7, 9, 0), ends_at: at(2026, 1, 7, 12, 31)), window
+  end
 end
