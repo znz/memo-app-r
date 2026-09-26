@@ -63,6 +63,20 @@ ja:
               invalid_max_per_day: 'のmax_per_dayは1以上の整数で指定してください'
 
   recurrence:
+    presets:
+      none: '単発'
+      hourly: '1時間ごと'
+      every_6_hours: '6時間ごと（例: 0時・6時・12時・18時）'
+      every_8_hours: '8時間ごと（例: 0時・8時・16時）'
+      daily: '毎日'
+      weekdays: '平日（月〜金）'
+      weekly: '毎週（通知開始日時の曜日）'
+      biweekly: '隔週（通知開始日時の曜日）'
+      monthly: '毎月（通知開始日時の日）'
+      monthly_last_wednesday: '毎月 最終水曜日'
+      yearly: '毎年（通知開始日時の月日）'
+      after_1_hour: '完了から1時間後'
+      after_1_hour_5_per_day: '完了から1時間後（1日5回まで）'
     labels:
       none: '単発'
       hourly: '1時間ごと'
@@ -84,3 +98,30 @@ ja:
       yearly_interval: '%{count}年ごと'
       after_completion: '完了から%{minutes}分後'
       max_per_day: '（1日%{count}回まで）'
+
+  reminders:
+    states:
+      waiting: '開始前'
+      active: '実行可能'
+      done: '完了済み'
+      overdue: '期限切れ'
+      cooling_down: 'クールダウン中'
+      limit_reached: '本日の上限に到達'
+      expired: '終了'
+      disabled: '無効'
+    remaining:
+      overdue: '期限切れ'
+      days_hours: 'あと %{days}日%{hours}時間'
+      hours_minutes: 'あと %{hours}時間%{minutes}分'
+      minutes: 'あと %{minutes}分'
+      less_than_a_minute: 'あと 1分未満'
+
+  theme_colors:
+    primary: '青 (primary)'
+    secondary: '灰 (secondary)'
+    success: '緑 (success)'
+    danger: '赤 (danger)'
+    warning: '黄 (warning)'
+    info: '水色 (info)'
+    light: '白 (light)'
+    dark: '黒 (dark)'
