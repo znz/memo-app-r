@@ -277,4 +277,85 @@ class ReminderTest < ActiveSupport::TestCase
     assert_equal 3, reminder.completed_count_on(at(2026, 1, 7, 23, 59))
     assert_equal 0, reminder.completed_count_on(at(2026, 1, 8, 0, 10))
   end
+
+  # completion
+
+  test "complete! counts completions and records the time" do
+    reminder = reminders(:water)
+    reminder.complete!(at(2026, 1, 7, 12, 0))
+    reminder.complete!(at(2026, 1, 7, 13, 0))
+    reminder.reload
+    assert_equal 2, reminder.completed_count
+    assert_equal at(2026, 1, 7, 13, 0), reminder.last_completed_at
+  end
+
+  test "complete! resets the count on another local date" do
+    reminder = reminders(:water)
+    reminder.complete!(at(2026, 1, 7, 23, 50))
+    reminder.complete!(at(2026, 1, 8, 0, 10))
+    assert_equal 1, reminder.reload.completed_count
+  end
+
+  test "complete! uses the current time by default" do
+    reminder = reminders(:water)
+    travel_to(at(2026, 1, 7, 12, 0)) { reminder.complete! }
+    assert_equal at(2026, 1, 7, 12, 0), reminder.reload.last_completed_at
+  end
+
+  test "memo_attributes prefill a new memo" do
+    assert_equal({ content: "昼の薬を飲んだ", tags: ["薬"] }, reminders(:lunch_medicine).memo_attributes)
+    assert_equal({ content: "日報", tags: [] }, reminders(:work_report).memo_attributes)
+  end
+
+  test "undo_complete! restores the state before the completion" do
+    reminder = reminders(:water)
+    previous = Time.zone.local(2026, 1, 7, 10, 0, 5, 123456)
+    reminder.update!(last_completed_at: previous, completed_count: 3)
+    token = reminder.undo_token
+    reminder.complete!(at(2026, 1, 7, 12, 0))
+    assert reminder.undo_complete!(token)
+    reminder.reload
+    assert_equal previous, reminder.last_completed_at
+    assert_equal 3, reminder.completed_count
+  end
+
+  test "undo_complete! restores a reminder never completed" do
+    reminder = reminders(:water)
+    token = reminder.undo_token
+    reminder.complete!(at(2026, 1, 7, 12, 0))
+    assert reminder.undo_complete!(token)
+    reminder.reload
+    assert_nil reminder.last_completed_at
+    assert_equal 0, reminder.completed_count
+  end
+
+  test "undo token expires" do
+    reminder = reminders(:water)
+    travel_to(at(2026, 1, 7, 12, 0)) do
+      token = reminder.undo_token
+      reminder.complete!
+      travel 61.minutes
+      assert_not reminder.undo_complete!(token)
+    end
+    assert_equal 1, reminder.reload.completed_count
+  end
+
+  test "undo token of another reminder is rejected" do
+    token = reminders(:github_streak).undo_token
+    reminder = reminders(:water)
+    reminder.complete!(at(2026, 1, 7, 12, 0))
+    assert_not reminder.undo_complete!(token)
+    assert_equal 1, reminder.reload.completed_count
+  end
+
+  test "tampered or blank undo token is rejected" do
+    reminder = reminders(:water)
+    token = reminder.undo_token
+    reminder.complete!(at(2026, 1, 7, 12, 0))
+    assert_not reminder.undo_complete!("#{token}x")
+    assert_not reminder.undo_complete!(token.reverse)
+    assert_not reminder.undo_complete!("")
+    assert_not reminder.undo_complete!(nil)
+    assert_equal 1, reminder.reload.completed_count
+  end
 end

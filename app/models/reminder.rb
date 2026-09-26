@@ -6,6 +6,7 @@ class Reminder < ApplicationRecord
 
   URGENT_WITHIN = 1.hour
   URGENT_RATIO = 0.25
+  UNDO_EXPIRES_IN = 1.hour
 
   belongs_to :user
   has_many :reminder_tags, dependent: :destroy
@@ -27,6 +28,8 @@ class Reminder < ApplicationRecord
   validate :tags_must_be_owned
 
   scope :enabled, -> { where(enabled: true) }
+
+  def self.undo_verifier = Rails.application.message_verifier(:reminder_undo)
 
   # Rule object built from recurrence (rebuilt when recurrence changes)
   def rule
@@ -56,6 +59,30 @@ class Reminder < ApplicationRecord
   # Completions on the local date of time
   def completed_count_on(time)
     (last_completed_at&.to_date == time.to_date) ? completed_count : 0
+  end
+
+  def complete!(now = Time.current)
+    update!(completed_count: completed_count_on(now) + 1, last_completed_at: now)
+  end
+
+  # Attributes of the new memo made after the completion
+  def memo_attributes
+    { content: memo_template.presence || name, tags: memo_tags }
+  end
+
+  # Signed token to restore the state before the completion
+  def undo_token
+    payload = { "id" => id, "last_completed_at" => last_completed_at&.iso8601(6), "completed_count" => completed_count }
+    self.class.undo_verifier.generate(payload, expires_in: UNDO_EXPIRES_IN, purpose: :undo_complete)
+  end
+
+  # Returns true when restored, false when the token is invalid, expired or for another reminder
+  def undo_complete!(token)
+    payload = token.present? && self.class.undo_verifier.verified(token, purpose: :undo_complete)
+    return false unless payload.is_a?(Hash) && payload["id"] == id
+
+    last_completed_at = payload["last_completed_at"] && Time.zone.iso8601(payload["last_completed_at"])
+    update!(last_completed_at:, completed_count: payload["completed_count"])
   end
 
   # No windows: starts_at enables, repeat_until ends, and only the one hour rule makes it urgent
