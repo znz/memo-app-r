@@ -228,6 +228,48 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "この位置でリマインダーを作成", count: 0
   end
 
+  test "index lists only the memos of the current user" do
+    get memos_url
+    assert_response :success
+    assert_select "td li", text: "tag1"
+    assert_select "td li", text: "tag3", count: 0
+  end
+
+  test "search form offers only the tags of the memos of the current user" do
+    get memos_url
+    assert_select "input[name='q[tags_contains][]'][value=tag1]"
+    assert_select "input[name='q[tags_contains][]'][value=tag3]", count: 0
+  end
+
+  test "new form offers only the tags of the memos of the current user" do
+    get new_memo_url
+    assert_select "input[name='memo[tags][]'][value=tag1]"
+    assert_select "input[name='memo[tags][]'][value=tag3]", count: 0
+  end
+
+  test "should not show another user's memo" do
+    get memo_url(memos(:two))
+    assert_response :not_found
+  end
+
+  test "should not edit another user's memo" do
+    get edit_memo_url(memos(:two))
+    assert_response :not_found
+  end
+
+  test "should not update another user's memo" do
+    patch memo_url(memos(:two)), params: { memo: { content: "changed" } }
+    assert_response :not_found
+    assert_equal "MyText", memos(:two).reload.content
+  end
+
+  test "should not destroy another user's memo" do
+    assert_no_difference("Memo.count") do
+      delete memo_url(memos(:two))
+    end
+    assert_response :not_found
+  end
+
   test "should not show memo with valid random uuid_v4" do
     get memo_url(SecureRandom.uuid_v4)
     assert_response :not_found

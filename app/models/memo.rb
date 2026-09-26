@@ -7,6 +7,12 @@ class Memo < ApplicationRecord
   NEARBY_REMINDERS_WITHIN = 30.minutes
 
   acts_as_taggable_array_on :tags
+
+  # Distinct tags of the memos of the user (all_tags ignores the current scope)
+  def self.all_tags_for(user)
+    user_id = user.id
+    all_tags { where(user_id: user_id) }
+  end
   belongs_to :user
 
   # Nearby reminders are shown on a memo with location just after its creation

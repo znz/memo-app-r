@@ -3,6 +3,8 @@
 require "test_helper"
 
 class RemindersHelperTest < ActionView::TestCase
+  private def current_user = users(:one)
+
   setup do
     @now = Time.zone.local(2026, 1, 7, 10, 17)
   end
@@ -66,9 +68,9 @@ class RemindersHelperTest < ActionView::TestCase
     assert(options.none? { it.first.include?("translation missing") })
   end
 
-  test "memo_tag_candidates adds the given tags to the tags of memos" do
-    assert_equal %w[tag1 tag2 tag3 新規], memo_tag_candidates(["新規", "tag1", ""])
-    assert_equal %w[tag1 tag2 tag3], memo_tag_candidates(nil)
+  test "memo_tag_candidates adds the given tags to the tags of the memos of the current user" do
+    assert_equal %w[tag1 tag2 新規], memo_tag_candidates(["新規", "tag1", ""])
+    assert_equal %w[tag1 tag2], memo_tag_candidates(nil)
   end
 
   test "reminder_state_label" do

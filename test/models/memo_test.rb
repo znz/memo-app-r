@@ -31,4 +31,9 @@ class MemoTest < ActiveSupport::TestCase
     memo = Memo.new(lonlat: nil, created_at: now)
     assert_not memo.nearby_reminders_visible?(now)
   end
+
+  test "all_tags_for lists only the tags of the memos of the user" do
+    assert_equal %w[tag1 tag2], Memo.all_tags_for(users(:one)).sort
+    assert_equal %w[tag2 tag3], Memo.all_tags_for(users(:two)).sort
+  end
 end

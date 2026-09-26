@@ -39,9 +39,9 @@ module RemindersHelper
     ThemeColor::COLORS.map { [t("theme_colors.#{it}"), it] }
   end
 
-  # Tags of memos and the given tags (e.g. prefilled from a reminder)
+  # Tags of the memos of the current user and the given tags (e.g. prefilled from a reminder)
   def memo_tag_candidates(tags)
-    (Memo.all_tags + Array(tags)).compact_blank.uniq.sort
+    (Memo.all_tags_for(current_user) + Array(tags)).compact_blank.uniq.sort
   end
 
   def reminder_state_label(reminder, now = Time.current)
