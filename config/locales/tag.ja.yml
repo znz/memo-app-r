@@ -13,3 +13,25 @@ ja:
         reminders: 'リマインダー'
         created_at: '作成日時'
         updated_at: '更新日時'
+
+  tags:
+    index:
+      title: 'タグ一覧'
+      enabled: '有効'
+      disabled: '無効'
+      new: '新規タグ'
+      edit: '編集'
+      destroy: '削除'
+      confirm_destroy: 'このタグを削除しますか？リマインダーからも外れます。'
+    new:
+      title: '新規タグ'
+      back: '戻る'
+    create:
+      success: 'タグが作成されました。'
+    edit:
+      title: 'タグ編集'
+      back: '戻る'
+    update:
+      success: 'タグが更新されました。'
+    destroy:
+      success: 'タグが削除されました。'

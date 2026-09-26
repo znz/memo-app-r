@@ -1,0 +1,10 @@
+= simple_form_for(@tag) do |f|
+  = f.error_notification
+
+  .form-inputs
+    = f.input :name, autofocus: true
+    = f.input :color, collection: theme_color_options, include_blank: false
+    = f.input :enabled
+
+  .form-actions
+    = f.button :submit, class: 'btn btn-primary'

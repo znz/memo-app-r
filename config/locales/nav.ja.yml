@@ -3,4 +3,5 @@ ja:
     site_name: 'Memo App R'
     home: 'メモ一覧'
     new_memo: '新規メモ'
+    tags: 'タグ'
     about: 'このサイトについて'
