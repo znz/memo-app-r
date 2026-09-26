@@ -1,0 +1,45 @@
+ja:
+  activerecord:
+    attributes:
+      reminder:
+        recurrence: '繰り返し'
+
+    errors:
+      models:
+        reminder:
+          attributes:
+            recurrence:
+              not_a_hash: 'はJSONのオブジェクトで指定してください'
+              unknown_type: 'の種類「%{type}」は使えません'
+              unknown_key: 'に使えないキー「%{key}」があります'
+              invalid_interval: 'のintervalは1以上の整数で指定してください'
+              invalid_weekdays: 'のweekdaysは0（日）から6（土）の整数の配列で指定してください'
+              invalid_day: 'のdayは1から31の整数か-1（末日）で指定してください'
+              invalid_nth: 'のnthは1から5の整数か-1（最終）で指定してください'
+              invalid_weekday: 'のweekdayは0（日）から6（土）の整数か"business"（平日）で指定してください'
+              day_and_nth: 'のdayとnthは同時に指定できません'
+              invalid_cooldown_minutes: 'のcooldown_minutesは1以上の整数で指定してください'
+              invalid_max_per_day: 'のmax_per_dayは1以上の整数で指定してください'
+
+  recurrence:
+    labels:
+      none: '単発'
+      hourly: '1時間ごと'
+      hourly_interval: '%{count}時間ごと'
+      daily: '毎日'
+      daily_interval: '%{count}日ごと'
+      weekly: '毎週'
+      weekly_interval: '%{count}週ごと'
+      biweekly: '隔週'
+      weekday_separator: '・'
+      monthly: '毎月'
+      monthly_interval: '%{count}か月ごと'
+      day: '%{day}日'
+      last_day: '末日'
+      nth_weekday: '第%{nth}%{weekday}'
+      last_weekday: '最終%{weekday}'
+      business_day: '平日'
+      yearly: '毎年'
+      yearly_interval: '%{count}年ごと'
+      after_completion: '完了から%{minutes}分後'
+      max_per_day: '（1日%{count}回まで）'
