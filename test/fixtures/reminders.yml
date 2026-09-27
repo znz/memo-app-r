@@ -58,6 +58,22 @@ second_tuesday:
   starts_at: 2026-01-01 06:00:00 +09:00
   due_at: 2026-01-01 08:30:00 +09:00
 
+weigh_in:
+  user: one
+  name: 体重測定
+  recurrence: { type: daily }
+  starts_at: 2026-01-01 00:00:00 +09:00
+  due_at: 2026-01-01 23:59:00 +09:00
+  prioritize_at: 2026-01-01 07:00:00 +09:00
+
+start_now:
+  user: one
+  name: すぐやる遠い期限
+  recurrence: { type: none }
+  starts_at: 2026-01-01 09:00:00 +09:00
+  due_at: 2026-03-31 18:00:00 +09:00
+  prioritize_at: 2026-01-01 09:00:00 +09:00
+
 recorded_show:
   user: one
   name: 録画を見る

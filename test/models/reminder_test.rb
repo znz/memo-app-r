@@ -228,7 +228,7 @@ class ReminderTest < ActiveSupport::TestCase
     reminder = reminders(:tax_papers)
     assert_equal :waiting, reminder.status_at(at(2026, 1, 1, 8, 59)).state
     status = reminder.status_at(at(2026, 1, 6, 18, 0, 59))
-    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 1, 9, 0), ends_at: at(2026, 1, 6, 18, 1)), status
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 1, 9, 0), ends_at: at(2026, 1, 6, 18, 1), prioritize_at: at(2026, 1, 5, 9, 45, 45)), status
     assert_equal :overdue, reminder.status_at(at(2026, 1, 6, 18, 1)).state
   end
 
@@ -246,7 +246,7 @@ class ReminderTest < ActiveSupport::TestCase
 
   test "windowed reminder is active in a window" do
     status = reminders(:lunch_medicine).status_at(at(2026, 1, 7, 12, 0))
-    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 7, 9, 0), ends_at: at(2026, 1, 7, 12, 31)), status
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 7, 9, 0), ends_at: at(2026, 1, 7, 12, 31), prioritize_at: at(2026, 1, 7, 11, 31)), status
   end
 
   test "windowed reminder is done when completed in the window" do
@@ -271,7 +271,8 @@ class ReminderTest < ActiveSupport::TestCase
 
   test "after_completion is active until completed" do
     status = reminders(:water).status_at(at(2026, 1, 7, 12, 0))
-    assert_equal Reminder::Status.new(state: :active, starts_at: nil, ends_at: at(2026, 1, 7, 12, 0).end_of_day), status
+    ends_at = at(2026, 1, 7, 12, 0).end_of_day
+    assert_equal Reminder::Status.new(state: :active, starts_at: nil, ends_at:, prioritize_at: ends_at - 1.hour), status
   end
 
   test "after_completion without max_per_day has no end" do
@@ -325,6 +326,70 @@ class ReminderTest < ActiveSupport::TestCase
     reminder = reminders(:water)
     reminder.repeat_until = at(2026, 1, 7, 17, 59)
     assert_equal at(2026, 1, 7, 18, 0), reminder.status_at(at(2026, 1, 7, 12, 0)).ends_at
+  end
+
+  # prioritize time of the status
+
+  test "windowed status has prioritize_at moved to the window" do
+    reminder = reminders(:weigh_in)
+    status = reminder.status_at(at(2026, 1, 7, 12, 0))
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 7, 0, 0), ends_at: at(2026, 1, 8, 0, 0), prioritize_at: at(2026, 1, 7, 7, 0)), status
+    assert_not reminder.status_at(at(2026, 1, 8, 6, 59, 59)).prioritized?(at(2026, 1, 8, 6, 59, 59))
+    assert reminder.status_at(at(2026, 1, 8, 7, 0)).prioritized?(at(2026, 1, 8, 7, 0))
+  end
+
+  test "windowed status without prioritize_at is prioritized for the last quarter or the last hour of the window" do
+    assert_equal at(2026, 1, 7, 18, 0), reminders(:github_streak).status_at(at(2026, 1, 7, 12, 0)).prioritize_at
+    reminder = reminders(:lunch_medicine)
+    assert_not reminder.status_at(at(2026, 1, 7, 11, 30, 59)).prioritized?(at(2026, 1, 7, 11, 30, 59))
+    assert reminder.status_at(at(2026, 1, 7, 11, 31)).prioritized?(at(2026, 1, 7, 11, 31))
+  end
+
+  test "windowed status falls back to the automatic rule when prioritize_at is not in the window" do
+    reminder = new_reminder(recurrence: { "type" => "weekly", "weekdays" => [1, 2] }, starts_at: at(2026, 1, 5, 9, 0), prioritize_at: at(2026, 1, 6, 15, 0))
+    assert_equal at(2026, 1, 13, 3, 0), reminder.status_at(at(2026, 1, 12, 10, 0)).prioritize_at
+    assert_equal at(2026, 1, 14, 15, 0), reminder.status_at(at(2026, 1, 13, 10, 0)).prioritize_at
+  end
+
+  test "none has prioritize_at as is" do
+    reminder = reminders(:start_now)
+    status = reminder.status_at(at(2026, 1, 7, 12, 0))
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 1, 9, 0), ends_at: at(2026, 3, 31, 18, 1), prioritize_at: at(2026, 1, 1, 9, 0)), status
+    assert status.prioritized?(at(2026, 1, 7, 12, 0))
+    assert_nil reminder.status_at(at(2026, 1, 1, 8, 59)).prioritize_at
+  end
+
+  test "none without starts_at is prioritized by the automatic rule from created_at" do
+    reminder = travel_to(at(2026, 1, 7, 12, 0)) { Reminder.create!(user: users(:one), name: "単発", due_at: at(2026, 1, 8, 11, 59)) }
+    assert_equal at(2026, 1, 8, 6, 0), reminder.status_at(at(2026, 1, 7, 13, 0)).prioritize_at
+  end
+
+  test "none without due_at is not prioritized unless prioritize_at is given" do
+    reminder = reminders(:near_station)
+    assert_nil reminder.status_at(at(2026, 1, 7, 12, 0)).prioritize_at
+    reminder.prioritize_at = at(2026, 1, 7, 12, 0)
+    assert_equal at(2026, 1, 7, 12, 0), reminder.status_at(at(2026, 1, 7, 12, 0)).prioritize_at
+  end
+
+  test "overdue none has the prioritize time too" do
+    assert_equal at(2026, 1, 5, 9, 45, 45), reminders(:tax_papers).status_at(at(2026, 1, 7, 12, 0)).prioritize_at
+  end
+
+  test "after_completion has prioritize_at as is, or is prioritized for the last hour of the day with max_per_day" do
+    reminder = reminders(:water)
+    assert_not reminder.status_at(at(2026, 1, 7, 22, 59, 59)).prioritized?(at(2026, 1, 7, 22, 59, 59))
+    assert reminder.status_at(at(2026, 1, 7, 23, 0)).prioritized?(at(2026, 1, 7, 23, 0))
+    reminder.prioritize_at = reminder.starts_at
+    assert_equal at(2026, 1, 1, 0, 0), reminder.status_at(at(2026, 1, 7, 12, 0)).prioritize_at
+
+    reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60 })
+    assert_nil reminder.status_at(at(2026, 1, 7, 12, 0)).prioritize_at
+  end
+
+  test "status not actionable has no prioritize time" do
+    reminder = reminders(:weigh_in)
+    reminder.last_completed_at = at(2026, 1, 7, 8, 0)
+    assert_equal Reminder::Status.new(state: :done, starts_at: at(2026, 1, 7, 0, 0), ends_at: at(2026, 1, 8, 0, 0)), reminder.status_at(at(2026, 1, 7, 12, 0))
   end
 
   test "completed_count_on counts only the completions of the day" do

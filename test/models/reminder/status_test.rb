@@ -21,31 +21,29 @@ class Reminder::StatusTest < ActiveSupport::TestCase
     end
   end
 
-  test "overdue is always urgent" do
-    assert Reminder::Status.new(state: :overdue, starts_at: @now - 10.days, ends_at: @now - 1.day).urgent?(@now)
+  test "prioritize_at is optional" do
+    assert_nil Reminder::Status.new(state: :active).prioritize_at
   end
 
-  test "urgent within an hour" do
-    assert Reminder::Status.new(state: :active, starts_at: @now - 2.hours, ends_at: @now + 1.hour).urgent?(@now)
-    assert_not Reminder::Status.new(state: :active, starts_at: @now - 2.hours, ends_at: @now + 61.minutes).urgent?(@now)
+  test "overdue is always prioritized" do
+    assert Reminder::Status.new(state: :overdue, starts_at: @now - 10.days, ends_at: @now - 1.day).prioritized?(@now)
+    assert Reminder::Status.new(state: :overdue, ends_at: @now - 1.day, prioritize_at: @now + 1.day).prioritized?(@now)
   end
 
-  test "urgent within a quarter of the window" do
-    assert Reminder::Status.new(state: :active, starts_at: @now - 30.hours, ends_at: @now + 2.hours).urgent?(@now)
-    assert_not Reminder::Status.new(state: :active, starts_at: @now - 2.hours, ends_at: @now + 2.hours).urgent?(@now)
+  test "active is prioritized from prioritize_at" do
+    status = Reminder::Status.new(state: :active, starts_at: @now - 5.hours, ends_at: @now + 12.hours, prioritize_at: @now)
+    assert_not status.prioritized?(@now - 1.second)
+    assert status.prioritized?(@now)
+    assert status.prioritized?(@now + 1.hour)
   end
 
-  test "only the one hour rule without starts_at" do
-    assert_not Reminder::Status.new(state: :active, ends_at: @now + 2.hours).urgent?(@now)
-    assert Reminder::Status.new(state: :active, ends_at: @now + 1.hour).urgent?(@now)
+  test "active without prioritize_at is not prioritized" do
+    assert_not Reminder::Status.new(state: :active, starts_at: @now - 1.day, ends_at: @now + 1.minute).prioritized?(@now)
   end
 
-  test "not urgent without ends_at" do
-    assert_not Reminder::Status.new(state: :active, starts_at: @now - 1.day).urgent?(@now)
-  end
-
-  test "not actionable is not urgent" do
-    assert_not Reminder::Status.new(state: :waiting, starts_at: @now + 1.minute, ends_at: @now + 30.minutes).urgent?(@now)
-    assert_not Reminder::Status.new(state: :done, starts_at: @now - 1.hour, ends_at: @now + 30.minutes).urgent?(@now)
+  test "not actionable is not prioritized" do
+    %i[waiting done cooling_down limit_reached expired disabled].each do |state|
+      assert_not Reminder::Status.new(state:, prioritize_at: @now - 1.hour).prioritized?(@now), state
+    end
   end
 end

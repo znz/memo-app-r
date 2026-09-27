@@ -7,8 +7,8 @@ class Reminder::ScheduleTest < ActiveSupport::TestCase
 
   private def at(*) = Time.zone.local(*)
 
-  private def schedule(recurrence, starts_at:, due_at: nil, repeat_until: nil)
-    Reminder::Schedule.new(rule: Recurrence.build(recurrence), starts_at:, due_at:, repeat_until:)
+  private def schedule(recurrence, starts_at:, due_at: nil, repeat_until: nil, prioritize_at: nil)
+    Reminder::Schedule.new(rule: Recurrence.build(recurrence), starts_at:, due_at:, repeat_until:, prioritize_at:)
   end
 
   test "window covers a half-open range" do
@@ -107,5 +107,37 @@ class Reminder::ScheduleTest < ActiveSupport::TestCase
     assert_equal Window.new(starts_at: at(2026, 1, 10, 9, 0), ends_at: at(2026, 1, 10, 11, 0)), schedule.next_window_after(at(2026, 1, 9, 10, 0))
     assert_nil schedule.next_window_after(at(2026, 1, 10, 10, 0))
     assert_nil schedule.next_window_after(at(2026, 1, 11, 0, 0))
+  end
+
+  test "prioritize time is at the same offset from the start of each window" do
+    schedule = schedule({ type: "daily" }, starts_at: at(2026, 1, 1, 0, 0), due_at: at(2026, 1, 1, 23, 59), prioritize_at: at(2026, 1, 1, 7, 0))
+    assert_equal at(2026, 1, 1, 7, 0), schedule.prioritize_at_in(schedule.window_at(at(2026, 1, 1, 0, 0)))
+    assert_equal at(2026, 1, 7, 7, 0), schedule.prioritize_at_in(schedule.window_at(at(2026, 1, 7, 12, 0)))
+    assert_equal at(2026, 1, 8, 7, 0), schedule.prioritize_at_in(schedule.window_at(at(2026, 1, 8, 6, 59)))
+    assert_equal at(2026, 1, 9, 7, 0), schedule.prioritize_at_in(schedule.next_window_after(at(2026, 1, 8, 12, 0)))
+  end
+
+  test "no prioritize time when the offset is not in a window shortened by the next occurrence" do
+    # Monday and Tuesday without due_at: the window of Monday lasts one day, that of Tuesday six days
+    schedule = schedule({ type: "weekly", weekdays: [1, 2] }, starts_at: at(2026, 1, 5, 9, 0), prioritize_at: at(2026, 1, 6, 15, 0))
+    assert_nil schedule.prioritize_at_in(schedule.window_at(at(2026, 1, 12, 10, 0)))
+    assert_equal at(2026, 1, 14, 15, 0), schedule.prioritize_at_in(schedule.window_at(at(2026, 1, 13, 10, 0)))
+
+    schedule = schedule({ type: "daily" }, starts_at: at(2026, 1, 1, 9, 0), due_at: at(2026, 1, 3, 9, 0), prioritize_at: at(2026, 1, 2, 12, 0))
+    assert_nil schedule.prioritize_at_in(schedule.window_at(at(2026, 1, 7, 10, 0)))
+  end
+
+  test "no prioritize time when the offset is after repeat_until" do
+    schedule = schedule({ type: "daily" }, starts_at: at(2026, 1, 1, 0, 0), due_at: at(2026, 1, 1, 23, 59), prioritize_at: at(2026, 1, 1, 7, 0),
+      repeat_until: at(2026, 1, 10, 5, 59))
+    assert_equal at(2026, 1, 9, 7, 0), schedule.prioritize_at_in(schedule.window_at(at(2026, 1, 9, 23, 0)))
+    assert_nil schedule.prioritize_at_in(schedule.window_at(at(2026, 1, 10, 5, 0)))
+  end
+
+  test "no prioritize time without prioritize_at or a window" do
+    schedule = schedule({ type: "daily" }, starts_at: at(2026, 1, 1, 0, 0), due_at: at(2026, 1, 1, 23, 59))
+    assert_nil schedule.prioritize_at_in(schedule.window_at(at(2026, 1, 7, 12, 0)))
+    schedule = schedule({ type: "daily" }, starts_at: at(2026, 1, 1, 0, 0), prioritize_at: at(2026, 1, 1, 7, 0))
+    assert_nil schedule.prioritize_at_in(nil)
   end
 end

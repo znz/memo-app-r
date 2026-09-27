@@ -14,9 +14,19 @@ class ReminderBoard
       .select { it.status.actionable? }
   end
 
-  def urgent = partitioned.first
+  # Overdue ones by ends_at, then the others by the prioritize time, each then by name
+  def prioritized
+    @prioritized ||= partitioned.first.sort_by do |item|
+      status = item.status
+      overdue = status.state == :overdue
+      [overdue ? 0 : 1, (overdue ? status.ends_at : status.prioritize_at).to_r, item.reminder.name]
+    end
+  end
 
-  def active = partitioned.last
+  # By ends_at, without ends_at last, then by name
+  def active
+    @active ||= partitioned.last.sort_by { [it.status.ends_at.nil? ? 1 : 0, it.status.ends_at.to_r, it.reminder.name] }
+  end
 
   # In the order of the given reminders (distance order of Reminder.near)
   def nearby = @items
@@ -26,8 +36,6 @@ class ReminderBoard
   end
 
   private def partitioned
-    @partitioned ||= @items
-      .sort_by { [it.status.ends_at.nil? ? 1 : 0, it.status.ends_at.to_r, it.reminder.name] }
-      .partition { it.status.urgent?(@now) }
+    @partitioned ||= @items.partition { it.status.prioritized?(@now) }
   end
 end

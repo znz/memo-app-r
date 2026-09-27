@@ -61,17 +61,31 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "new shows urgent reminders above the form and the others below it" do
+  test "new shows prioritized reminders above the form and the others below it" do
     travel_to_base_time
     get new_memo_url
     assert_response :success
 
     body = response.body
-    assert_operator body.index('id="urgent_reminders"'), :<, body.index('id="new_memo"')
+    assert_operator body.index('id="prioritized_reminders"'), :<, body.index('id="new_memo"')
     assert_operator body.index('id="new_memo"'), :<, body.index('id="active_reminders"')
-    assert_equal %i[tax_papers lunch_medicine].map { reminders(it).name }, card_names("#urgent_reminders")
+    assert_select "#prioritized_reminders h2", "優先するリマインダー"
+    assert_select "#active_reminders h2", "リマインダー"
+    assert_equal %i[tax_papers start_now weigh_in lunch_medicine].map { reminders(it).name }, card_names("#prioritized_reminders")
     assert_equal %i[work_report water github_streak recorded_show far_shinjuku near_station].map { reminders(it).name },
       card_names("#active_reminders")
+  end
+
+  test "new shows a reminder above the form from its prioritize time" do
+    travel_to Time.zone.local(2026, 1, 7, 6, 59)
+    get new_memo_url
+    assert_equal %i[tax_papers start_now].map { reminders(it).name }, card_names("#prioritized_reminders")
+    assert_includes card_names("#active_reminders"), reminders(:weigh_in).name
+
+    travel_to Time.zone.local(2026, 1, 7, 7, 0)
+    get new_memo_url
+    assert_equal %i[tax_papers start_now weigh_in].map { reminders(it).name }, card_names("#prioritized_reminders")
+    assert_not_includes card_names("#active_reminders"), reminders(:weigh_in).name
   end
 
   test "reminder cards on new show the state, the tags and a button to complete" do
@@ -79,11 +93,11 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     reminders(:water).update!(last_completed_at: 3.hours.ago, completed_count: 2)
     get new_memo_url
 
-    assert_select "#urgent_reminders .reminder-card.border-secondary", text: /確定申告の書類を集める/ do
+    assert_select "#prioritized_reminders .reminder-card.border-secondary", text: /確定申告の書類を集める/ do
       assert_select ".badge.badge-danger", "期限切れ"
       assert_select "form[action=?] button.btn.btn-sm.btn-outline-success", complete_reminder_path(reminders(:tax_papers)), "完了"
     end
-    assert_select "#urgent_reminders .reminder-card.border-success", text: /昼の薬/ do
+    assert_select "#prioritized_reminders .reminder-card.border-success", text: /昼の薬/ do
       assert_select "*", /あと 31分/
       assert_select ".badge.badge-success", "健康"
       assert_select ".small", "食後に飲む"
@@ -98,7 +112,7 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     travel_to_base_time
     get new_memo_url
 
-    shown = card_names("#urgent_reminders") + card_names("#active_reminders")
+    shown = card_names("#prioritized_reminders") + card_names("#active_reminders")
     %i[paused archived_hobby mwf_gym second_tuesday others_reminder].each do |name|
       assert_not_includes shown, reminders(name).name
     end
@@ -109,7 +123,7 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     cookies[:hidden_tag_ids] = [tags(:work).id, tags(:health).id].join(",")
     get new_memo_url
 
-    shown = card_names("#urgent_reminders") + card_names("#active_reminders")
+    shown = card_names("#prioritized_reminders") + card_names("#active_reminders")
     assert_not_includes shown, reminders(:work_report).name
     assert_not_includes shown, reminders(:lunch_medicine).name
     assert_includes shown, reminders(:github_streak).name
@@ -121,7 +135,7 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     get new_memo_url
 
     assert_response :success
-    assert_equal 8, (card_names("#urgent_reminders") + card_names("#active_reminders")).size
+    assert_equal 10, (card_names("#prioritized_reminders") + card_names("#active_reminders")).size
   end
 
   test "new has no reminder sections without actionable reminders" do
@@ -131,7 +145,7 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     get new_memo_url
 
     assert_response :success
-    assert_select "#urgent_reminders", 0
+    assert_select "#prioritized_reminders", 0
     assert_select "#active_reminders", 0
     assert_select "#hidden_tags_form", 0
   end
@@ -169,7 +183,7 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_select "form#new_memo textarea[name=?]", "memo[content]", text: "未保存"
-    assert_select "#urgent_reminders .reminder-card", 2
+    assert_select "#prioritized_reminders .reminder-card", 4
     assert_select "#active_reminders .reminder-card", 6
   end
 

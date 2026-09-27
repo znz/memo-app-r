@@ -82,7 +82,7 @@ class Reminder < ApplicationRecord
   end
 
   def schedule
-    Reminder::Schedule.new(rule:, starts_at:, due_at:, repeat_until:)
+    Reminder::Schedule.new(rule:, starts_at:, due_at:, repeat_until:, prioritize_at:)
   end
 
   def status_at(now = Time.current)
@@ -128,8 +128,8 @@ class Reminder < ApplicationRecord
     end
   end
 
-  # No windows: starts_at enables, repeat_until ends, and only the one hour rule makes it urgent.
-  # Expired also when the limit of the day or the cooldown lasts until repeat_until.
+  # No windows: starts_at enables, repeat_until ends, and prioritize_at is used as is
+  # (only the one hour rule without it). Expired also when the limit of the day or the cooldown lasts until repeat_until.
   private def after_completion_status_at(now)
     repeat_limit = schedule.repeat_limit
     limit_reached = rule.max_per_day && completed_count_on(now) >= rule.max_per_day
@@ -144,11 +144,13 @@ class Reminder < ApplicationRecord
     elsif now < available_at
       Status.new(state: :cooling_down, starts_at: available_at)
     else
-      Status.new(state: :active, ends_at: [(now.end_of_day if rule.max_per_day), repeat_limit].compact.min)
+      ends_at = [(now.end_of_day if rule.max_per_day), repeat_limit].compact.min
+      Status.new(state: :active, ends_at:, prioritize_at: effective_prioritize_at(prioritize_at, nil, ends_at))
     end
   end
 
   private def windowed_status_at(now)
+    schedule = self.schedule
     window = schedule.window_at(now)
     if window.nil?
       next_window = schedule.next_window_after(now)
@@ -158,7 +160,8 @@ class Reminder < ApplicationRecord
     elsif last_completed_at && window.cover?(last_completed_at)
       Status.new(state: :done, starts_at: window.starts_at, ends_at: window.ends_at)
     else
-      Status.new(state: :active, starts_at: window.starts_at, ends_at: window.ends_at)
+      prioritize_at = effective_prioritize_at(schedule.prioritize_at_in(window), window.starts_at, window.ends_at)
+      Status.new(state: :active, starts_at: window.starts_at, ends_at: window.ends_at, prioritize_at:)
     end
   end
 
@@ -170,10 +173,21 @@ class Reminder < ApplicationRecord
     elsif start.nil? || now < start
       Status.new(state: :waiting, starts_at: start, ends_at:)
     elsif ends_at && now >= ends_at
-      Status.new(state: :overdue, starts_at: start, ends_at:)
+      Status.new(state: :overdue, starts_at: start, ends_at:, prioritize_at: effective_prioritize_at(prioritize_at, start, ends_at))
     else
-      Status.new(state: :active, starts_at: start, ends_at:)
+      Status.new(state: :active, starts_at: start, ends_at:, prioritize_at: effective_prioritize_at(prioritize_at, start, ends_at))
     end
+  end
+
+  # The explicit prioritize time, or else the automatic one: from when the rest of the window (start ... ends_at)
+  # is within URGENT_WITHIN or within URGENT_RATIO of the window (only URGENT_WITHIN without start). nil without ends_at.
+  private def effective_prioritize_at(explicit, start, ends_at)
+    return explicit if explicit
+    return unless ends_at
+
+    margin = URGENT_WITHIN.to_f
+    margin = [margin, (ends_at - start) * URGENT_RATIO].max if start
+    ends_at - margin
   end
 
   private def completion_state

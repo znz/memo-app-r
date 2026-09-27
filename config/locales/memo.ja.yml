@@ -35,7 +35,7 @@ ja:
       total: '合計: '
     new:
       title: '新規メモ'
-      urgent: '期限が迫っているリマインダー'
+      prioritized: '優先するリマインダー'
       active: 'リマインダー'
     show:
       nearby: '近くのリマインダー'

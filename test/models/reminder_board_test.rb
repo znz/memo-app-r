@@ -13,8 +13,34 @@ class ReminderBoardTest < ActiveSupport::TestCase
 
   private def names(items) = items.map { it.reminder.name }
 
-  test "urgent reminders are sorted by ends_at" do
-    assert_equal [reminders(:tax_papers), reminders(:lunch_medicine)], board.urgent.map(&:reminder)
+  test "prioritized reminders are overdue ones by ends_at, then the others by the prioritize time" do
+    assert_equal %i[tax_papers start_now weigh_in lunch_medicine].map { reminders(it) }, board.prioritized.map(&:reminder)
+  end
+
+  test "prioritized reminders with the same time are sorted by name" do
+    start_now = reminders(:start_now)
+    users(:one).reminders.create!(name: "あとでやる", starts_at: start_now.starts_at, due_at: @now + 30.days, prioritize_at: start_now.prioritize_at)
+    overdue = users(:one).reminders.create!(name: "あの書類", starts_at: @now - 2.days, due_at: reminders(:tax_papers).due_at)
+    expected = [overdue.name, reminders(:tax_papers).name, "あとでやる", reminders(:start_now).name, reminders(:weigh_in).name, reminders(:lunch_medicine).name]
+    assert_equal expected, names(board.prioritized)
+  end
+
+  test "reminders are prioritized from their prioritize time" do
+    @now = Time.zone.local(2026, 1, 7, 6, 59)
+    assert_equal %i[tax_papers start_now].map { reminders(it).name }, names(board.prioritized)
+    assert_includes names(board.active), reminders(:weigh_in).name
+
+    @now = Time.zone.local(2026, 1, 7, 11, 30)
+    assert_equal %i[tax_papers start_now weigh_in].map { reminders(it).name }, names(board.prioritized)
+    assert_includes names(board.active), reminders(:lunch_medicine).name
+
+    @now = Time.zone.local(2026, 1, 7, 11, 31)
+    assert_equal %i[tax_papers start_now weigh_in lunch_medicine].map { reminders(it).name }, names(board.prioritized)
+  end
+
+  test "a prioritized reminder disappears once done" do
+    reminders(:weigh_in).complete!(@now - 1.hour)
+    assert_not_includes names(board.prioritized + board.active), reminders(:weigh_in).name
   end
 
   test "active reminders are sorted by ends_at, without ends_at last, then by name" do
@@ -23,20 +49,22 @@ class ReminderBoardTest < ActiveSupport::TestCase
   end
 
   test "items have the status" do
-    item = board.urgent.last
+    item = board.prioritized.last
     assert_equal reminders(:lunch_medicine), item.reminder
-    assert_equal Reminder::Status.new(state: :active, starts_at: Time.zone.local(2026, 1, 7, 9, 0), ends_at: Time.zone.local(2026, 1, 7, 12, 31)), item.status
+    expected = Reminder::Status.new(state: :active, starts_at: Time.zone.local(2026, 1, 7, 9, 0), ends_at: Time.zone.local(2026, 1, 7, 12, 31),
+      prioritize_at: Time.zone.local(2026, 1, 7, 11, 31))
+    assert_equal expected, item.status
   end
 
   test "reminders not actionable are excluded" do
-    shown = names(board.urgent + board.active)
+    shown = names(board.prioritized + board.active)
     %i[paused mwf_gym second_tuesday].each do |name|
       assert_not_includes shown, reminders(name).name
     end
   end
 
   test "reminders with a disabled tag are excluded" do
-    assert_not_includes names(board.urgent + board.active), reminders(:archived_hobby).name
+    assert_not_includes names(board.prioritized + board.active), reminders(:archived_hobby).name
   end
 
   test "reminders with a hidden tag are excluded" do

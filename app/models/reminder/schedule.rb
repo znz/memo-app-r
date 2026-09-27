@@ -3,6 +3,7 @@
 # Windows of a windowed repeat rule: each occurrence opens a window which lasts
 # as long as the first window (starts_at .. due_at), but ends at the next occurrence
 # or at repeat_until when they come first. Without due_at a window lasts until the next occurrence.
+# prioritize_at moves with the windows at the same offset from their starts.
 class Reminder::Schedule
   # Half-open range [starts_at, ends_at)
   Window = Data.define(:starts_at, :ends_at) do
@@ -14,11 +15,12 @@ class Reminder::Schedule
   # The minute of due_at and repeat_until is included: 7:59 ends at 8:00 (exclusive)
   def self.exclusive_end(time) = time.change(sec: 0, usec: 0) + 1.minute
 
-  def initialize(rule:, starts_at:, due_at:, repeat_until:)
+  def initialize(rule:, starts_at:, due_at:, repeat_until:, prioritize_at:)
     @rule = rule
     @starts_at = starts_at
     @due_at = due_at
     @repeat_until = repeat_until
+    @prioritize_at = prioritize_at
   end
 
   def window_at(now)
@@ -32,6 +34,14 @@ class Reminder::Schedule
     return unless @rule.windowed? && @starts_at
 
     window_from(@rule.occurrence_after([now, @starts_at - 1.second].max, anchor: @starts_at))
+  end
+
+  # prioritize_at moved to the window, nil when it is not in the window
+  def prioritize_at_in(window)
+    return unless window && @prioritize_at && @starts_at
+
+    time = window.starts_at + (@prioritize_at - @starts_at)
+    time if window.cover?(time)
   end
 
   def repeat_limit

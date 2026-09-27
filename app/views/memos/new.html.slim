@@ -1,10 +1,10 @@
 - now = Time.current
 h1 = t(:'.title')
 
-- if @reminder_board.urgent.any?
-  section#urgent_reminders.mb-3
-    h2.h5 = t(:'.urgent')
-    == render partial: 'reminders/card', collection: @reminder_board.urgent, as: :item, locals: { now: }
+- if @reminder_board.prioritized.any?
+  section#prioritized_reminders.mb-3
+    h2.h5 = t(:'.prioritized')
+    == render partial: 'reminders/card', collection: @reminder_board.prioritized, as: :item, locals: { now: }
 
 == render 'form'
 
