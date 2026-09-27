@@ -92,7 +92,13 @@ class ReminderTest < ActiveSupport::TestCase
     assert_not reminder.valid?
     assert reminder.errors.of_kind?(:prioritize_at, :not_after_due_at)
     assert new_reminder(due_at: at(2026, 1, 1, 12, 30), prioritize_at: at(2026, 1, 1, 12, 30, 59)).valid?
-    assert new_reminder(prioritize_at: at(2026, 1, 3, 9, 0)).valid?
+  end
+
+  test "prioritize_at of a repeating rule without due_at must be before the next occurrence" do
+    reminder = new_reminder(prioritize_at: at(2026, 1, 2, 9, 0))
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:prioritize_at, :not_in_first_window)
+    assert new_reminder(prioritize_at: at(2026, 1, 2, 8, 59)).valid?
   end
 
   test "prioritize_at of none is checked only against the given starts_at and due_at" do

@@ -45,6 +45,7 @@ ja:
             prioritize_at:
               not_before_starts_at: 'は通知開始日時以降にしてください'
               not_after_due_at: 'は実行可能期限以前にしてください'
+              not_in_first_window: 'は次の枠の開始より前にしてください'
             repeat_until:
               after_starts_at: 'は通知開始日時より後にしてください'
             latitude:

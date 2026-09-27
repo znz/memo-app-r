@@ -259,12 +259,17 @@ class Reminder < ApplicationRecord
     errors.add(:repeat_until, :after_starts_at) if repeat_until && repeat_until <= starts_at
   end
 
-  # In the first window (starts_at .. the minute of due_at) as far as they are given
+  # In the first window (starts_at .. the minute of due_at) as far as they are given;
+  # without due_at a repeating rule's first window ends at the next occurrence
   private def prioritize_at_must_be_in_first_window
     return unless prioritize_at
 
     errors.add(:prioritize_at, :not_before_starts_at) if starts_at && prioritize_at < starts_at
     errors.add(:prioritize_at, :not_after_due_at) if due_at && prioritize_at >= Schedule.exclusive_end(due_at)
+    return if due_at || starts_at.nil? || !valid_rule&.windowed?
+
+    first_window = schedule.window_at(starts_at)
+    errors.add(:prioritize_at, :not_in_first_window) if first_window && prioritize_at >= first_window.ends_at
   end
 
   private def tags_must_be_owned
