@@ -23,4 +23,38 @@ module ApplicationHelper
       end
     end
   end
+
+  def make_link(text)
+    out = ''.html_safe
+    link = false
+    text.split(/\b(https?:[^\s\"\']+)/) do |s|
+      if link
+        out << tag.a(href: s) { s }
+      else
+        out << s
+      end
+      link = !link
+    end
+    out
+  end
+
+  def format_content(text, type)
+    case type
+    when :auto
+      case text
+      when /```/ # markdown
+        return tag.pre { tag.code { text } }
+      when /</ # html
+        return simple_format text
+      else
+        return simple_format text
+      end
+    when :simple_format
+      return simple_format(make_link(text))
+    when :oneline
+      return make_link(text)
+    else
+      text
+    end
+  end
 end

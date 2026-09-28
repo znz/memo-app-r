@@ -18,5 +18,5 @@
         - if local_assigns[:distance]
           small.text-muted.ml-2 = t(:'.distance', distance: distance.round)
       - if reminder.description.present?
-        .small.text-muted = reminder.description
+        .small.text-muted = format_content(reminder.description, :oneline)
     = button_to t(:'.complete'), complete_reminder_path(reminder), class: 'btn btn-sm btn-outline-success', form_class: 'ml-2 mb-0'

@@ -30,7 +30,7 @@ table.table
               li = tag
         td
           div.arib-font.memo-scroll
-            = simple_format memo.content
+            = format_content(memo.content, :auto)
         td = memo.price&.to_fs(:delimited)
         td
           = link_to 'Show', memo, accesskey: (idx.zero? ? 'S' : nil)

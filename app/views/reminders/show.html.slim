@@ -8,9 +8,9 @@ dl.row
     - @reminder.tags.each do |tag_record|
       =< theme_badge tag_record.name, tag_record.color
   dt.col-sm-3 = Reminder.human_attribute_name(:description)
-  dd.col-sm-9 = simple_format @reminder.description
+  dd.col-sm-9 = format_content(@reminder.description, :simple_format)
   dt.col-sm-3 = Reminder.human_attribute_name(:memo_template)
-  dd.col-sm-9.arib-font = simple_format @reminder.memo_template
+  dd.col-sm-9.arib-font = format_content(@reminder.memo_template, :auto)
   dt.col-sm-3 = Reminder.human_attribute_name(:memo_tags)
   dd.col-sm-9
     ul.list-unstyled
