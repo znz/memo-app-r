@@ -21,6 +21,8 @@ class Recurrence::Rule
 
   delegate :type, to: :class
 
+  def overdue? = false
+
   def to_h = { "type" => type, **@values }
 
   private def with_detail(base, detail) = detail ? "#{base} #{detail}" : base
@@ -30,6 +32,15 @@ class Recurrence::Rule
 
     value = @values[key]
     raise Recurrence::InvalidRule, error_key unless value.is_a?(Integer) && value.positive?
+
+    value
+  end
+
+  private def boolean(key, error_key, default: false)
+    return default unless @values.key?(key)
+
+    value = @values[key]
+    raise Recurrence::InvalidRule, error_key unless [true, false].include?(value)
 
     value
   end

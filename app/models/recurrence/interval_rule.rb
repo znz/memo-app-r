@@ -7,16 +7,20 @@
 # - `estimated_index(time, anchor)`: an index not smaller than the index of the last occurrence at or before time
 # - `search_count`: how many candidates are searched (keeps every search bounded)
 class Recurrence::IntervalRule < Recurrence::Rule
-  KEYS = %w[interval].freeze
+  KEYS = %w[interval overdue].freeze
 
   attr_reader :interval
 
   def initialize(attributes)
     super
     @interval = positive_integer("interval", :invalid_interval, default: 1)
+    @overdue = boolean("overdue", :invalid_overdue)
   end
 
   def windowed? = true
+
+  # Stays overdue after an ended window until completed or until the next window opens
+  def overdue? = @overdue
 
   def occurrence_at_or_before(time, anchor:)
     time = time.in_time_zone
@@ -49,6 +53,10 @@ class Recurrence::IntervalRule < Recurrence::Rule
   end
 
   def label
+    overdue? ? base_label + I18n.t("recurrence.labels.overdue") : base_label
+  end
+
+  private def base_label
     if interval == 1
       I18n.t(type, scope: "recurrence.labels")
     else

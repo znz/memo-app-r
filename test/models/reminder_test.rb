@@ -9,6 +9,11 @@ class ReminderTest < ActiveSupport::TestCase
     Reminder.new(user: users(:one), name: "薬を飲む", recurrence: { "type" => "daily" }, starts_at: at(2026, 1, 1, 9, 0), **attributes)
   end
 
+  private def month_end_calendar(**attributes)
+    new_reminder(recurrence: { "type" => "monthly", "day" => -1, "overdue" => true },
+      starts_at: at(2026, 1, 31, 18, 0), due_at: at(2026, 1, 31, 23, 59), prioritize_at: at(2026, 1, 31, 20, 0), **attributes)
+  end
+
   test "defaults" do
     reminder = Reminder.new
     assert reminder.enabled?
@@ -72,6 +77,15 @@ class ReminderTest < ActiveSupport::TestCase
     assert_not reminder.valid?
     assert reminder.errors.of_kind?(:repeat_until, :after_starts_at)
     assert new_reminder(repeat_until: at(2026, 1, 10, 0, 0)).valid?
+  end
+
+  test "overdue requires due_at or repeat_until" do
+    reminder = new_reminder(recurrence: { "type" => "daily", "overdue" => true })
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:recurrence, :overdue_without_end)
+    assert new_reminder(recurrence: { "type" => "daily", "overdue" => true }, due_at: at(2026, 1, 1, 12, 0)).valid?
+    assert new_reminder(recurrence: { "type" => "daily", "overdue" => true }, repeat_until: at(2026, 1, 10, 23, 59)).valid?
+    assert new_reminder(recurrence: { "type" => "daily", "overdue" => false }).valid?
   end
 
   test "after_completion does not allow due_at" do
@@ -273,6 +287,48 @@ class ReminderTest < ActiveSupport::TestCase
     reminder = reminders(:recorded_show)
     assert_equal :active, reminder.status_at(at(2026, 1, 10, 23, 59, 59)).state
     assert_equal :expired, reminder.status_at(at(2026, 1, 11, 0, 0)).state
+  end
+
+  test "overdue windowed reminder stays overdue after the window until the next window opens" do
+    reminder = month_end_calendar
+    assert_equal :active, reminder.status_at(at(2026, 1, 31, 19, 0)).state
+    overdue = Reminder::Status.new(state: :overdue, starts_at: at(2026, 1, 31, 18, 0), ends_at: at(2026, 2, 1, 0, 0), prioritize_at: at(2026, 1, 31, 20, 0))
+    assert_equal overdue, reminder.status_at(at(2026, 2, 1, 0, 0))
+    assert_equal overdue, reminder.status_at(at(2026, 2, 27, 12, 0))
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 2, 28, 18, 0), ends_at: at(2026, 3, 1, 0, 0), prioritize_at: at(2026, 2, 28, 20, 0)),
+      reminder.status_at(at(2026, 2, 28, 18, 0))
+  end
+
+  test "overdue windowed reminder completed after the window is done until the next window opens" do
+    reminder = month_end_calendar(last_completed_at: at(2026, 2, 3, 9, 0))
+    assert_equal Reminder::Status.new(state: :done, starts_at: at(2026, 1, 31, 18, 0), ends_at: at(2026, 2, 1, 0, 0)), reminder.status_at(at(2026, 2, 10, 0, 0))
+    assert_equal :active, reminder.status_at(at(2026, 2, 28, 18, 0)).state
+  end
+
+  test "overdue windowed reminder completed in the ended window is done" do
+    reminder = reminders(:lunch_medicine)
+    reminder.recurrence = { "type" => "daily", "overdue" => true }
+    reminder.last_completed_at = at(2026, 1, 7, 9, 30)
+    assert_equal Reminder::Status.new(state: :done, starts_at: at(2026, 1, 7, 9, 0), ends_at: at(2026, 1, 7, 12, 31)), reminder.status_at(at(2026, 1, 7, 13, 0))
+    reminder.last_completed_at = at(2026, 1, 6, 9, 30)
+    assert_equal :overdue, reminder.status_at(at(2026, 1, 7, 13, 0)).state
+  end
+
+  test "overdue status without prioritize_at falls back to the automatic rule" do
+    reminder = reminders(:lunch_medicine)
+    reminder.recurrence = { "type" => "daily", "overdue" => true }
+    assert_equal Reminder::Status.new(state: :overdue, starts_at: at(2026, 1, 7, 9, 0), ends_at: at(2026, 1, 7, 12, 31), prioritize_at: at(2026, 1, 7, 11, 31)),
+      reminder.status_at(at(2026, 1, 7, 13, 0))
+  end
+
+  test "overdue windowed reminder stays overdue after repeat_until until completed" do
+    reminder = reminders(:recorded_show)
+    reminder.recurrence = { "type" => "daily", "overdue" => true }
+    assert_equal Reminder::Status.new(state: :overdue, starts_at: at(2026, 1, 10, 0, 0), ends_at: at(2026, 1, 11, 0, 0), prioritize_at: at(2026, 1, 10, 18, 0)),
+      reminder.status_at(at(2026, 1, 11, 0, 0))
+    assert_equal :overdue, reminder.status_at(at(2026, 3, 1, 12, 0)).state
+    reminder.last_completed_at = at(2026, 1, 12, 20, 0)
+    assert_equal Reminder::Status.new(state: :expired), reminder.status_at(at(2026, 1, 13, 0, 0))
   end
 
   test "after_completion is active until completed" do

@@ -3,7 +3,7 @@
 # Every N weeks on the given weekdays (0 = Sunday .. 6 = Saturday, default: the weekday of the anchor).
 # Weeks start on Monday and are counted from the week of the anchor.
 class Recurrence::Weekly < Recurrence::IntervalRule
-  KEYS = %w[interval weekdays].freeze
+  KEYS = (superclass::KEYS + %w[weekdays]).freeze
 
   attr_reader :weekdays
 
@@ -19,7 +19,7 @@ class Recurrence::Weekly < Recurrence::IntervalRule
     @weekdays = @values["weekdays"] = weekdays.uniq.sort
   end
 
-  def label
+  private def base_label
     base = (interval == 2) ? I18n.t("recurrence.labels.biweekly") : super
     with_detail(base, weekdays_label)
   end

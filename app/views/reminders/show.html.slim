@@ -29,7 +29,8 @@ dl.row
   dd.col-sm-9
     pre.reminder-json = JSON.pretty_generate(@reminder.recurrence)
   - if @reminder.rule.windowed?
-    - { current_window: schedule.window_at(now), next_window: schedule.next_window_after(now) }.each do |key, window|
+    - current_window = schedule.window_at(now) || (schedule.last_window_at(now) if @reminder.rule.overdue?)
+    - { current_window:, next_window: schedule.next_window_after(now) }.each do |key, window|
       dt.col-sm-3 = t(".#{key}")
       dd.col-sm-9
         - if window

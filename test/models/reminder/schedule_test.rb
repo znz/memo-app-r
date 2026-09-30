@@ -90,6 +90,32 @@ class Reminder::ScheduleTest < ActiveSupport::TestCase
     assert_nil schedule.window_at(at(2026, 1, 11, 9, 30))
   end
 
+  test "last_window_at inside a window is the window" do
+    schedule = schedule({ type: "daily" }, starts_at: at(2026, 1, 1, 9, 0), due_at: at(2026, 1, 1, 12, 30))
+    now = at(2026, 1, 7, 10, 0)
+    assert_equal Window.new(starts_at: at(2026, 1, 7, 9, 0), ends_at: at(2026, 1, 7, 12, 31)), schedule.last_window_at(now)
+    assert_equal schedule.window_at(now), schedule.last_window_at(now)
+  end
+
+  test "last_window_at between windows is the ended window" do
+    schedule = schedule({ type: "daily" }, starts_at: at(2026, 1, 1, 9, 0), due_at: at(2026, 1, 1, 12, 30))
+    assert_equal Window.new(starts_at: at(2026, 1, 7, 9, 0), ends_at: at(2026, 1, 7, 12, 31)), schedule.last_window_at(at(2026, 1, 7, 13, 0))
+    assert_equal Window.new(starts_at: at(2026, 1, 6, 9, 0), ends_at: at(2026, 1, 6, 12, 31)), schedule.last_window_at(at(2026, 1, 7, 8, 59))
+  end
+
+  test "last_window_at after repeat_until is the last capped window" do
+    schedule = schedule({ type: "daily" }, starts_at: at(2026, 1, 1, 9, 0), due_at: at(2026, 1, 1, 12, 30), repeat_until: at(2026, 1, 10, 10, 59))
+    assert_equal Window.new(starts_at: at(2026, 1, 10, 9, 0), ends_at: at(2026, 1, 10, 11, 0)), schedule.last_window_at(at(2026, 1, 11, 9, 30))
+  end
+
+  test "no last_window_at before starts_at, without starts_at or without windows" do
+    assert_nil schedule({ type: "daily" }, starts_at: at(2026, 1, 5, 9, 0)).last_window_at(at(2026, 1, 5, 8, 59))
+    assert_nil schedule({ type: "daily" }, starts_at: nil).last_window_at(at(2026, 1, 5, 9, 0))
+    [{ type: "none" }, { type: "after_completion", cooldown_minutes: 60 }].each do |recurrence|
+      assert_nil schedule(recurrence, starts_at: at(2026, 1, 1, 9, 0), due_at: at(2026, 1, 1, 12, 0)).last_window_at(at(2026, 1, 7, 10, 0))
+    end
+  end
+
   test "next_window_after before starts_at is the first window" do
     schedule = schedule({ type: "daily" }, starts_at: at(2026, 1, 5, 9, 0), due_at: at(2026, 1, 5, 12, 0))
     assert_equal Window.new(starts_at: at(2026, 1, 5, 9, 0), ends_at: at(2026, 1, 5, 12, 1)), schedule.next_window_after(at(2026, 1, 1, 0, 0))

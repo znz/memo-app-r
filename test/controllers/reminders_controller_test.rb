@@ -143,6 +143,20 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?] input[name=_method][value=delete]", reminder_path(reminders(:lunch_medicine))
   end
 
+  test "should show overdue reminder between windows" do
+    travel_to Time.zone.local(2026, 1, 7, 13, 0)
+    reminder = reminders(:lunch_medicine)
+    reminder.update!(recurrence: { "type" => "daily", "overdue" => true })
+    get reminder_url(reminder)
+    assert_response :success
+    assert_select "dd", "期限切れ"
+    assert_select "dd", "毎日（期限後も表示）"
+    assert_select "dt", "現在の枠"
+    assert_select "dd", "2026/01/07 09:00 〜 2026/01/07 12:30"
+    assert_select "dt", "次の枠"
+    assert_select "dd", "2026/01/08 09:00 〜 2026/01/08 12:30"
+  end
+
   test "should show reminder with location" do
     reminder = reminders(:near_station)
     get reminder_url(reminder)

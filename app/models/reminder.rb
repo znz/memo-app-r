@@ -32,6 +32,7 @@ class Reminder < ApplicationRecord
   validate :recurrence_must_be_valid
   validate :recurrence_input_must_be_valid
   validate :times_must_be_ordered
+  validate :overdue_must_have_end
   validate :prioritize_at_must_be_in_first_window
   validate :tags_must_be_owned
 
@@ -152,17 +153,33 @@ class Reminder < ApplicationRecord
   private def windowed_status_at(now)
     schedule = self.schedule
     window = schedule.window_at(now)
-    if window.nil?
+    if window
+      return Status.new(state: :done, starts_at: window.starts_at, ends_at: window.ends_at) if last_completed_at && window.cover?(last_completed_at)
+
+      Status.new(state: :active, starts_at: window.starts_at, ends_at: window.ends_at, prioritize_at: window_prioritize_at(schedule, window))
+    elsif rule.overdue? && (window = schedule.last_window_at(now))
+      lingering_status(schedule, window, now)
+    else
       next_window = schedule.next_window_after(now)
       return Status.new(state: :expired) unless next_window
 
       Status.new(state: :waiting, starts_at: next_window.starts_at, ends_at: next_window.ends_at)
-    elsif last_completed_at && window.cover?(last_completed_at)
+    end
+  end
+
+  # The ended window of an overdue rule remains until the next one opens (or forever without a next one)
+  private def lingering_status(schedule, window, now)
+    if last_completed_at && last_completed_at >= window.starts_at
+      return Status.new(state: :expired) unless schedule.next_window_after(now)
+
       Status.new(state: :done, starts_at: window.starts_at, ends_at: window.ends_at)
     else
-      prioritize_at = effective_prioritize_at(schedule.prioritize_at_in(window), window.starts_at, window.ends_at)
-      Status.new(state: :active, starts_at: window.starts_at, ends_at: window.ends_at, prioritize_at:)
+      Status.new(state: :overdue, starts_at: window.starts_at, ends_at: window.ends_at, prioritize_at: window_prioritize_at(schedule, window))
     end
+  end
+
+  private def window_prioritize_at(schedule, window)
+    effective_prioritize_at(schedule.prioritize_at_in(window), window.starts_at, window.ends_at)
   end
 
   private def single_status_at(now)
@@ -257,6 +274,11 @@ class Reminder < ApplicationRecord
 
     errors.add(:due_at, :after_starts_at) if due_at && due_at <= starts_at
     errors.add(:repeat_until, :after_starts_at) if repeat_until && repeat_until <= starts_at
+  end
+
+  # Without them the windows abut and overdue has no effect
+  private def overdue_must_have_end
+    errors.add(:recurrence, :overdue_without_end) if valid_rule&.overdue? && due_at.nil? && repeat_until.nil?
   end
 
   # In the first window (starts_at .. the minute of due_at) as far as they are given;

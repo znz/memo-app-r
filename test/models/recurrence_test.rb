@@ -429,6 +429,47 @@ class RecurrenceTest < ActiveSupport::TestCase
     assert_equal "2年ごと", build(type: "yearly", interval: 2).label
   end
 
+  # overdue
+
+  test "overdue defaults to false" do
+    %w[none hourly daily weekly monthly yearly].each do |type|
+      assert_not build(type:).overdue?, type
+    end
+    assert_not build(type: "after_completion", cooldown_minutes: 60).overdue?
+  end
+
+  test "overdue is parsed for windowed rules" do
+    %w[hourly daily weekly monthly yearly].each do |type|
+      rule = build(type:, overdue: true)
+      assert_predicate rule, :overdue?, type
+      assert_equal({ "type" => type, "overdue" => true }, rule.to_h)
+    end
+    assert_not build(type: "daily", overdue: false).overdue?
+    assert_predicate build(type: "monthly", day: -1, overdue: true), :overdue?
+    assert_predicate build(type: "weekly", weekdays: [1, 3, 5], overdue: true), :overdue?
+  end
+
+  test "overdue must be true or false" do
+    ["yes", 1, nil, "true"].each do |value|
+      assert_invalid_rule :invalid_overdue, { type: "daily", overdue: value }
+    end
+  end
+
+  test "overdue is an unknown key of none and after_completion" do
+    assert_invalid_rule :unknown_key, { type: "none", overdue: true }
+    assert_invalid_rule :unknown_key, { type: "after_completion", cooldown_minutes: 60, overdue: true }
+  end
+
+  test "overdue label" do
+    assert_equal "毎日（期限後も表示）", build(type: "daily", overdue: true).label
+    assert_equal "8時間ごと（期限後も表示）", build(type: "hourly", interval: 8, overdue: true).label
+    assert_equal "毎週 月・水・金（期限後も表示）", build(type: "weekly", weekdays: [1, 3, 5], overdue: true).label
+    assert_equal "隔週（期限後も表示）", build(type: "weekly", interval: 2, overdue: true).label
+    assert_equal "毎月 末日（期限後も表示）", build(type: "monthly", day: -1, overdue: true).label
+    assert_equal "毎月（期限後も表示）", build(type: "monthly", overdue: true).label
+    assert_equal "毎年（期限後も表示）", build(type: "yearly", overdue: true).label
+  end
+
   # after_completion
 
   test "after_completion is not windowed" do

@@ -23,11 +23,19 @@ class Reminder::Schedule
     @prioritize_at = prioritize_at
   end
 
+  # The window covering now
   def window_at(now)
+    window = last_window_at(now)
+    window if window&.cover?(now)
+  end
+
+  # The window of the last occurrence at or before now, even when it has ended
+  # (after repeat_until, the last window before it)
+  def last_window_at(now)
     return unless @rule.windowed? && @starts_at && now >= @starts_at
 
-    window = window_from(@rule.occurrence_at_or_before(now, anchor: @starts_at))
-    window if window&.cover?(now)
+    time = repeat_limit ? [now, repeat_limit - 1.second].min : now
+    window_from(@rule.occurrence_at_or_before(time, anchor: @starts_at))
   end
 
   def next_window_after(now)

@@ -43,6 +43,19 @@ class ReminderBoardTest < ActiveSupport::TestCase
     assert_not_includes names(board.prioritized + board.active), reminders(:weigh_in).name
   end
 
+  test "an overdue windowed reminder stays prioritized after its window until completed" do
+    @now = Time.zone.local(2026, 1, 7, 13, 0)
+    assert_not_includes names(board.prioritized + board.active), reminders(:lunch_medicine).name
+
+    reminders(:lunch_medicine).update!(recurrence: { "type" => "daily", "overdue" => true })
+    item = board.prioritized.find { it.reminder == reminders(:lunch_medicine) }
+    assert_equal :overdue, item.status.state
+    assert_equal reminders(:tax_papers), board.prioritized.first.reminder
+
+    reminders(:lunch_medicine).complete!(@now)
+    assert_not_includes names(board.prioritized + board.active), reminders(:lunch_medicine).name
+  end
+
   test "active reminders are sorted by ends_at, without ends_at last, then by name" do
     expected = %i[work_report water github_streak recorded_show far_shinjuku near_station].map { reminders(it).name }
     assert_equal expected, names(board.active)

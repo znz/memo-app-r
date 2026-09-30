@@ -5,7 +5,7 @@
 # (0..6 or "business" = Monday to Friday).
 # Without day and nth, the day of the anchor is used. Months without the nth weekday are skipped.
 class Recurrence::Monthly < Recurrence::IntervalRule
-  KEYS = %w[interval day nth weekday].freeze
+  KEYS = (superclass::KEYS + %w[day nth weekday]).freeze
   BUSINESS = "business"
   DAYS = [*-31..-1, *1..31].freeze
   NTHS = [*-5..-1, *1..5].freeze
@@ -27,7 +27,7 @@ class Recurrence::Monthly < Recurrence::IntervalRule
     end
   end
 
-  def label
+  private def base_label
     with_detail(super, day_label || nth_label)
   end
 
