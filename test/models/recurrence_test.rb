@@ -246,6 +246,24 @@ class RecurrenceTest < ActiveSupport::TestCase
     assert_nil rule.occurrence_at_or_before(at(2026, 1, 30, 0, 0), anchor:)
   end
 
+  test "monthly day -2 is the day before the last day of the month" do
+    rule = build(type: "monthly", day: -2)
+    anchor = at(2026, 1, 1, 9, 0)
+    assert_equal at(2026, 1, 30, 9, 0), rule.occurrence_after(anchor, anchor:)
+    assert_equal at(2026, 2, 27, 9, 0), rule.occurrence_after(at(2026, 1, 30, 9, 0), anchor:)
+    assert_equal at(2026, 3, 30, 9, 0), rule.occurrence_after(at(2026, 2, 27, 9, 0), anchor:)
+    assert_equal at(2026, 2, 27, 9, 0), rule.occurrence_at_or_before(at(2026, 3, 29, 0, 0), anchor:)
+    assert_nil rule.occurrence_at_or_before(at(2026, 1, 29, 0, 0), anchor:)
+  end
+
+  test "monthly negative day is clamped to the first day of the month" do
+    rule = build(type: "monthly", day: -31)
+    anchor = at(2026, 1, 1, 9, 0)
+    assert_equal anchor, rule.occurrence_at_or_before(anchor, anchor:)
+    assert_equal at(2026, 2, 1, 9, 0), rule.occurrence_after(anchor, anchor:)
+    assert_equal at(2026, 3, 1, 9, 0), rule.occurrence_after(at(2026, 2, 1, 9, 0), anchor:)
+  end
+
   test "monthly on the second tuesday" do
     rule = build(type: "monthly", nth: 2, weekday: 2)
     anchor = at(2026, 1, 1, 10, 0)
@@ -270,6 +288,31 @@ class RecurrenceTest < ActiveSupport::TestCase
     assert_equal at(2026, 2, 27, 9, 0), rule.occurrence_after(at(2026, 1, 30, 9, 0), anchor:)
     assert_equal at(2026, 3, 31, 9, 0), rule.occurrence_after(at(2026, 2, 27, 9, 0), anchor:)
     assert_equal at(2026, 5, 29, 9, 0), rule.occurrence_at_or_before(at(2026, 6, 29, 0, 0), anchor:)
+  end
+
+  test "monthly on the second to last wednesday" do
+    rule = build(type: "monthly", nth: -2, weekday: 3)
+    anchor = at(2026, 1, 1, 9, 0)
+    assert_equal at(2026, 1, 21, 9, 0), rule.occurrence_after(anchor, anchor:)
+    assert_equal at(2026, 2, 18, 9, 0), rule.occurrence_after(at(2026, 1, 21, 9, 0), anchor:)
+    assert_equal at(2026, 3, 18, 9, 0), rule.occurrence_after(at(2026, 2, 18, 9, 0), anchor:)
+    assert_equal at(2026, 2, 18, 9, 0), rule.occurrence_at_or_before(at(2026, 3, 17, 0, 0), anchor:)
+  end
+
+  test "monthly on the second to last business day" do
+    rule = build(type: "monthly", nth: -2, weekday: "business")
+    anchor = at(2026, 1, 1, 9, 0)
+    assert_equal at(2026, 1, 29, 9, 0), rule.occurrence_after(anchor, anchor:)
+    assert_equal at(2026, 2, 26, 9, 0), rule.occurrence_after(at(2026, 1, 29, 9, 0), anchor:)
+    assert_equal at(2026, 3, 30, 9, 0), rule.occurrence_after(at(2026, 2, 26, 9, 0), anchor:)
+  end
+
+  test "monthly skips months without the fifth weekday from the end" do
+    rule = build(type: "monthly", nth: -5, weekday: 4)
+    anchor = at(2026, 1, 1, 9, 0)
+    assert_equal anchor, rule.occurrence_at_or_before(anchor, anchor:)
+    assert_equal at(2026, 4, 2, 9, 0), rule.occurrence_after(anchor, anchor:)
+    assert_equal anchor, rule.occurrence_at_or_before(at(2026, 4, 1, 0, 0), anchor:)
   end
 
   test "monthly on the first business day" do
@@ -336,19 +379,23 @@ class RecurrenceTest < ActiveSupport::TestCase
     assert_equal "毎月", build(type: "monthly").label
     assert_equal "毎月 15日", build(type: "monthly", day: 15).label
     assert_equal "毎月 末日", build(type: "monthly", day: -1).label
+    assert_equal "毎月 末日の1日前", build(type: "monthly", day: -2).label
+    assert_equal "毎月 末日の2日前", build(type: "monthly", day: -3).label
     assert_equal "毎月 第2火曜日", build(type: "monthly", nth: 2, weekday: 2).label
     assert_equal "毎月 最終水曜日", build(type: "monthly", nth: -1, weekday: 3).label
     assert_equal "毎月 最終平日", build(type: "monthly", nth: -1, weekday: "business").label
+    assert_equal "毎月 最後から2番目の水曜日", build(type: "monthly", nth: -2, weekday: 3).label
+    assert_equal "毎月 最後から2番目の平日", build(type: "monthly", nth: -2, weekday: "business").label
     assert_equal "毎月 第1平日", build(type: "monthly", nth: 1, weekday: "business").label
     assert_equal "3か月ごと 15日", build(type: "monthly", interval: 3, day: 15).label
   end
 
   test "monthly validations" do
-    [0, 32, -2, "15"].each do |day|
+    [0, 32, -32, "15"].each do |day|
       assert_invalid_rule :invalid_day, { type: "monthly", day: }
     end
     assert_invalid_rule :day_and_nth, { type: "monthly", day: 15, nth: 2, weekday: 2 }
-    [0, 6, -2, "2"].each do |nth|
+    [0, 6, -6, "2"].each do |nth|
       assert_invalid_rule :invalid_nth, { type: "monthly", nth:, weekday: 2 }
     end
     [7, -1, "holiday", "2"].each do |weekday|
@@ -415,7 +462,7 @@ class RecurrenceTest < ActiveSupport::TestCase
   # presets
 
   test "presets are ordered and valid" do
-    assert_equal %w[none hourly every_6_hours every_8_hours daily weekdays weekly biweekly monthly monthly_last_wednesday yearly after_1_hour after_1_hour_5_per_day],
+    assert_equal %w[none hourly every_6_hours every_8_hours daily weekdays weekly biweekly monthly monthly_last_day monthly_last_wednesday yearly after_1_hour after_1_hour_5_per_day],
       Recurrence::PRESETS.keys
     Recurrence::PRESETS.each do |key, hash|
       assert_equal hash, build(hash).to_h, key

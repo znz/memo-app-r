@@ -28,6 +28,7 @@ module Recurrence
     "weekly" => { "type" => "weekly" },
     "biweekly" => { "type" => "weekly", "interval" => 2 },
     "monthly" => { "type" => "monthly" },
+    "monthly_last_day" => { "type" => "monthly", "day" => -1 },
     "monthly_last_wednesday" => { "type" => "monthly", "nth" => -1, "weekday" => 3 },
     "yearly" => { "type" => "yearly" },
     "after_1_hour" => { "type" => "after_completion", "cooldown_minutes" => 60 },

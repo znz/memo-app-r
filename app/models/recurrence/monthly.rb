@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
-# Every N months on a day (1..31, -1 = last day, clamped to the end of the month)
-# or on the nth (1..5, -1 = last) weekday (0..6 or "business" = Monday to Friday).
+# Every N months on a day (1..31 clamped to the end of the month, or -1..-31 counted from the last day
+# and clamped to the first day) or on the nth (1..5, or -1..-5 counted from the last) weekday
+# (0..6 or "business" = Monday to Friday).
 # Without day and nth, the day of the anchor is used. Months without the nth weekday are skipped.
 class Recurrence::Monthly < Recurrence::IntervalRule
   KEYS = %w[interval day nth weekday].freeze
   BUSINESS = "business"
-  DAYS = [-1, *1..31].freeze
-  NTHS = [-1, *1..5].freeze
+  DAYS = [*-31..-1, *1..31].freeze
+  NTHS = [*-5..-1, *1..5].freeze
   WEEKDAYS = [*0..6, BUSINESS].freeze
   # The weekdays of the calendar repeat every 28 years (within a century)
   NTH_SEARCH_MONTHS = 28 * 12
@@ -54,12 +55,12 @@ class Recurrence::Monthly < Recurrence::IntervalRule
 
   private def clamped_day(date, day)
     last_day = date.end_of_month.day
-    (day == -1) ? last_day : [day, last_day].min
+    day.negative? ? [last_day + day + 1, 1].max : [day, last_day].min
   end
 
   private def nth_day(date)
     days = (1..date.end_of_month.day).select { weekday_matches?(date.change(day: it)) }
-    (nth == -1) ? days.last : days[nth - 1]
+    nth.negative? ? days[nth] : days[nth - 1]
   end
 
   private def weekday_matches?(date)
@@ -67,15 +68,22 @@ class Recurrence::Monthly < Recurrence::IntervalRule
   end
 
   private def day_label
-    return unless day
-
-    (day == -1) ? I18n.t("recurrence.labels.last_day") : I18n.t("recurrence.labels.day", day:)
+    case day
+    when nil then nil
+    when -1 then I18n.t("recurrence.labels.last_day")
+    when ..-2 then I18n.t("recurrence.labels.days_before_last_day", count: -day - 1)
+    else I18n.t("recurrence.labels.day", day:)
+    end
   end
 
   private def nth_label
     return unless nth
 
     weekday_name = (weekday == BUSINESS) ? I18n.t("recurrence.labels.business_day") : I18n.t("date.day_names")[weekday]
-    (nth == -1) ? I18n.t("recurrence.labels.last_weekday", weekday: weekday_name) : I18n.t("recurrence.labels.nth_weekday", nth:, weekday: weekday_name)
+    case nth
+    when -1 then I18n.t("recurrence.labels.last_weekday", weekday: weekday_name)
+    when ..-2 then I18n.t("recurrence.labels.nth_last_weekday", nth: -nth, weekday: weekday_name)
+    else I18n.t("recurrence.labels.nth_weekday", nth:, weekday: weekday_name)
+    end
   end
 end
