@@ -39,6 +39,7 @@ module ApplicationHelper
   end
 
   def format_content(text, type)
+    return unless text
     case type
     when :auto
       case text
