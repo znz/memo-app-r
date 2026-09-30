@@ -25,13 +25,13 @@ module ApplicationHelper
   end
 
   def make_link(text)
-    out = ''.html_safe
+    out = "".html_safe
     link = false
-    text.split(/\b(https?:[^\s\"\']+)/) do |s|
-      if link
-        out << tag.a(href: s) { s }
+    text.split(/\b(https?:[^\s"']+)/) do |s|
+      out << if link
+        tag.a(href: s) { s }
       else
-        out << s
+        s
       end
       link = !link
     end
@@ -44,16 +44,16 @@ module ApplicationHelper
     when :auto
       case text
       when /```/ # markdown
-        return tag.pre { tag.code { text } }
+        tag.pre { tag.code { text } }
       when /</ # html
-        return simple_format text
+        simple_format text
       else
-        return simple_format text
+        simple_format text
       end
     when :simple_format
-      return simple_format(make_link(text))
+      simple_format(make_link(text))
     when :oneline
-      return make_link(text)
+      make_link(text)
     else
       text
     end
