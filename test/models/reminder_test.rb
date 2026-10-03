@@ -14,6 +14,11 @@ class ReminderTest < ActiveSupport::TestCase
       starts_at: at(2026, 1, 31, 18, 0), due_at: at(2026, 1, 31, 23, 59), prioritize_at: at(2026, 1, 31, 20, 0), **attributes)
   end
 
+  private def due_reminder(**attributes)
+    new_reminder(recurrence: { "type" => "after_completion", "cooldown_days" => 150, "due_days" => 30 },
+      last_completed_at: at(2026, 1, 7, 15, 30), completed_count: 1, **attributes)
+  end
+
   test "defaults" do
     reminder = Reminder.new
     assert reminder.enabled?
@@ -92,6 +97,22 @@ class ReminderTest < ActiveSupport::TestCase
     reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60 }, due_at: at(2026, 1, 1, 12, 0))
     assert_not reminder.valid?
     assert reminder.errors.of_kind?(:due_at, :not_allowed)
+  end
+
+  test "after_completion with cooldown_days and due_days is valid but does not allow due_at" do
+    reminder = new_reminder(recurrence_json: '{"type":"after_completion","cooldown_days":150,"due_days":30}')
+    assert reminder.valid?
+    assert_equal({ "type" => "after_completion", "cooldown_days" => 150, "due_days" => 30 }, reminder.recurrence)
+    reminder.due_at = at(2026, 1, 1, 12, 0)
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:due_at, :not_allowed)
+    assert_includes reminder.errors.full_messages_for(:due_at), "実行可能期限は完了からの繰り返しでは指定できません（JSON の due_minutes / due_days で期限を指定できます）"
+  end
+
+  test "after_completion with an invalid cooldown is invalid" do
+    reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60, "cooldown_days" => 1 })
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:recurrence, :cooldown_minutes_and_days)
   end
 
   test "prioritize_at must not be before starts_at" do
@@ -388,6 +409,107 @@ class ReminderTest < ActiveSupport::TestCase
     reminder = reminders(:water)
     reminder.repeat_until = at(2026, 1, 7, 17, 59)
     assert_equal at(2026, 1, 7, 18, 0), reminder.status_at(at(2026, 1, 7, 12, 0)).ends_at
+  end
+
+  test "after_completion with cooldown_days is cooling down until the beginning of the day" do
+    reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_days" => 60 }, last_completed_at: at(2026, 1, 7, 15, 30), completed_count: 1)
+    assert_equal Reminder::Status.new(state: :cooling_down, starts_at: at(2026, 3, 8, 0, 0)), reminder.status_at(at(2026, 3, 7, 23, 59))
+    assert_equal :active, reminder.status_at(at(2026, 3, 8, 0, 0)).state
+  end
+
+  test "after_completion with due is active from the end of the cooldown until the deadline" do
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 6, 6, 0, 0), ends_at: at(2026, 7, 6, 0, 0), prioritize_at: at(2026, 6, 28, 12, 0)),
+      due_reminder.status_at(at(2026, 6, 10, 12, 0))
+  end
+
+  test "after_completion with due is overdue after the deadline until completed" do
+    reminder = due_reminder
+    overdue = Reminder::Status.new(state: :overdue, starts_at: at(2026, 6, 6, 0, 0), ends_at: at(2026, 7, 6, 0, 0), prioritize_at: at(2026, 6, 28, 12, 0))
+    assert_equal :active, reminder.status_at(at(2026, 7, 5, 23, 59, 59)).state
+    assert_equal overdue, reminder.status_at(at(2026, 7, 6, 0, 0))
+    assert_equal overdue, reminder.status_at(at(2027, 1, 1, 0, 0))
+    reminder.last_completed_at = at(2027, 1, 1, 9, 0)
+    assert_equal Reminder::Status.new(state: :cooling_down, starts_at: at(2027, 5, 31, 0, 0)), reminder.status_at(at(2027, 1, 1, 9, 0))
+  end
+
+  test "after_completion with due has the deadline from starts_at when it is after the end of the cooldown" do
+    reminder = due_reminder(starts_at: at(2026, 7, 1, 9, 0))
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 7, 1, 9, 0), ends_at: at(2026, 7, 31, 0, 0), prioritize_at: at(2026, 7, 23, 14, 15)),
+      reminder.status_at(at(2026, 7, 10, 12, 0))
+  end
+
+  test "after_completion with due cooling down past midnight after the limit of the day has the window from the end of the cooldown" do
+    reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60, "due_minutes" => 120, "max_per_day" => 3 },
+      last_completed_at: at(2026, 1, 7, 23, 30), completed_count: 3)
+    assert_equal Reminder::Status.new(state: :cooling_down, starts_at: at(2026, 1, 8, 0, 30)), reminder.status_at(at(2026, 1, 8, 0, 10))
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 8, 0, 30), ends_at: at(2026, 1, 8, 2, 30), prioritize_at: at(2026, 1, 8, 1, 30)),
+      reminder.status_at(at(2026, 1, 8, 0, 30))
+  end
+
+  test "overdue after_completion with due and max_per_day ends at the deadline" do
+    reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60, "due_minutes" => 120, "max_per_day" => 3 },
+      last_completed_at: at(2026, 1, 7, 10, 0), completed_count: 1)
+    assert_equal Reminder::Status.new(state: :overdue, starts_at: at(2026, 1, 7, 11, 0), ends_at: at(2026, 1, 7, 13, 0), prioritize_at: at(2026, 1, 7, 12, 0)),
+      reminder.status_at(at(2026, 1, 7, 14, 0))
+  end
+
+  test "after_completion with due has the first deadline from starts_at" do
+    reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60, "due_days" => 1 })
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 1, 9, 0), ends_at: at(2026, 1, 2, 0, 0), prioritize_at: at(2026, 1, 1, 20, 15)),
+      reminder.status_at(at(2026, 1, 1, 12, 0))
+  end
+
+  test "after_completion with due without starts_at has the first deadline from created_at" do
+    recurrence = { "type" => "after_completion", "cooldown_minutes" => 60, "due_minutes" => 120 }
+    reminder = travel_to(at(2026, 1, 7, 12, 0)) { Reminder.create!(user: users(:one), name: "完了から", recurrence:) }
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 7, 12, 0), ends_at: at(2026, 1, 7, 14, 0), prioritize_at: at(2026, 1, 7, 13, 0)),
+      reminder.status_at(at(2026, 1, 7, 12, 30))
+    assert_equal :overdue, reminder.status_at(at(2026, 1, 7, 14, 0)).state
+  end
+
+  test "after_completion with due ends at repeat_until when it comes first" do
+    reminder = due_reminder(repeat_until: at(2026, 6, 19, 23, 59))
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 6, 6, 0, 0), ends_at: at(2026, 6, 20, 0, 0), prioritize_at: at(2026, 6, 16, 12, 0)),
+      reminder.status_at(at(2026, 6, 10, 12, 0))
+    assert_equal Reminder::Status.new(state: :expired), reminder.status_at(at(2026, 6, 20, 0, 0))
+  end
+
+  test "overdue after_completion with due expires after repeat_until" do
+    reminder = due_reminder(repeat_until: at(2026, 7, 31, 23, 59))
+    assert_equal :overdue, reminder.status_at(at(2026, 7, 31, 23, 59)).state
+    assert_equal Reminder::Status.new(state: :expired), reminder.status_at(at(2026, 8, 1, 0, 0))
+  end
+
+  test "after_completion with due and max_per_day ends at the deadline, not at the end of the day" do
+    reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60, "due_minutes" => 120, "max_per_day" => 3 },
+      last_completed_at: at(2026, 1, 7, 22, 30), completed_count: 1)
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 7, 23, 30), ends_at: at(2026, 1, 8, 1, 30), prioritize_at: at(2026, 1, 8, 0, 30)),
+      reminder.status_at(at(2026, 1, 7, 23, 45))
+  end
+
+  test "after_completion with due and max_per_day is prioritized by the same window every day" do
+    reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60, "due_days" => 30, "max_per_day" => 3 })
+    expected = Reminder::Status.new(state: :active, starts_at: at(2026, 1, 1, 9, 0), ends_at: at(2026, 1, 31, 0, 0), prioritize_at: at(2026, 1, 23, 14, 15))
+    assert_equal expected, reminder.status_at(at(2026, 1, 2, 12, 0))
+    assert_equal expected, reminder.status_at(at(2026, 1, 5, 12, 0))
+  end
+
+  test "after_completion with due is available from the beginning of the day after the limit of the day was reached" do
+    reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60, "due_minutes" => 120, "max_per_day" => 3 },
+      last_completed_at: at(2026, 1, 7, 10, 0), completed_count: 3)
+    assert_equal Reminder::Status.new(state: :active, starts_at: at(2026, 1, 8, 0, 0), ends_at: at(2026, 1, 8, 2, 0), prioritize_at: at(2026, 1, 8, 1, 0)),
+      reminder.status_at(at(2026, 1, 8, 0, 30))
+  end
+
+  test "after_completion with due has prioritize_at as is" do
+    reminder = due_reminder(prioritize_at: at(2026, 1, 1, 9, 0))
+    assert_equal at(2026, 1, 1, 9, 0), reminder.status_at(at(2026, 6, 10, 12, 0)).prioritize_at
+    assert_equal at(2026, 1, 1, 9, 0), reminder.status_at(at(2026, 7, 10, 12, 0)).prioritize_at
+  end
+
+  test "unsaved after_completion with due without starts_at has no deadline" do
+    reminder = new_reminder(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60, "due_minutes" => 120 }, starts_at: nil)
+    assert_equal Reminder::Status.new(state: :active), reminder.status_at(at(2026, 1, 7, 12, 0))
   end
 
   # prioritize time of the status

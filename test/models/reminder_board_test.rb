@@ -56,6 +56,15 @@ class ReminderBoardTest < ActiveSupport::TestCase
     assert_not_includes names(board.prioritized + board.active), reminders(:lunch_medicine).name
   end
 
+  test "an after_completion reminder past its deadline is prioritized until completed" do
+    reminders(:water).update!(recurrence: { "type" => "after_completion", "cooldown_minutes" => 60, "due_days" => 1 })
+    item = board.prioritized.find { it.reminder == reminders(:water) }
+    assert_equal :overdue, item.status.state
+
+    reminders(:water).complete!(@now)
+    assert_not_includes names(board.prioritized + board.active), reminders(:water).name
+  end
+
   test "active reminders are sorted by ends_at, without ends_at last, then by name" do
     expected = %i[work_report water github_streak recorded_show far_shinjuku near_station].map { reminders(it).name }
     assert_equal expected, names(board.active)

@@ -103,6 +103,19 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_equal({ "type" => "monthly", "nth" => -1, "weekday" => "business" }, reminder.recurrence)
   end
 
+  test "should create after_completion reminder with cooldown_days and due_days" do
+    post reminders_url, params: { reminder: {
+      name: "エアコンのフィルター掃除", recurrence_preset: "",
+      recurrence_json: '{"type": "after_completion", "cooldown_days": 150, "due_days": 30}'
+    } }
+
+    reminder = users(:one).reminders.find_by!(name: "エアコンのフィルター掃除")
+    assert_redirected_to reminder_url(reminder)
+    assert_equal({ "type" => "after_completion", "cooldown_days" => 150, "due_days" => 30 }, reminder.recurrence)
+    follow_redirect!
+    assert_select "dd", "完了日から150日後（期限30日）"
+  end
+
   test "should not create reminder with invalid attributes" do
     assert_no_difference("Reminder.count") do
       post reminders_url, params: { reminder: { name: "", recurrence_json: "{", memo_tags: ["", "会議"] } }

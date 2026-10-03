@@ -53,7 +53,7 @@ class RecurrenceTest < ActiveSupport::TestCase
   test "error message is human readable" do
     error = assert_invalid_rule(:unknown_type, { type: "sometimes" })
     assert_includes error.message, "sometimes"
-    assert_not_includes error.message, "translation missing"
+    assert_no_match(/translation missing/i, error.message)
   end
 
   # none
@@ -488,16 +488,85 @@ class RecurrenceTest < ActiveSupport::TestCase
     assert_equal({ "type" => "after_completion", "cooldown_minutes" => 60 }, rule.to_h)
   end
 
+  test "after_completion has cooldown_days and due keys" do
+    rule = build(type: "after_completion", cooldown_days: 150, due_days: 30)
+    assert_nil rule.cooldown_minutes
+    assert_equal 150, rule.cooldown_days
+    assert_nil rule.due_minutes
+    assert_equal 30, rule.due_days
+    assert_equal({ "type" => "after_completion", "cooldown_days" => 150, "due_days" => 30 }, rule.to_h)
+    rule = build(type: "after_completion", cooldown_minutes: 90, due_minutes: 30)
+    assert_nil rule.cooldown_days
+    assert_equal 30, rule.due_minutes
+    assert_nil rule.due_days
+  end
+
+  test "after_completion cooldown_ends_at with cooldown_minutes" do
+    assert_equal at(2026, 1, 7, 17, 0), build(type: "after_completion", cooldown_minutes: 90).cooldown_ends_at(at(2026, 1, 7, 15, 30))
+  end
+
+  test "after_completion cooldown_ends_at with cooldown_days is the beginning of the day" do
+    assert_equal at(2026, 3, 8, 0, 0), build(type: "after_completion", cooldown_days: 60).cooldown_ends_at(at(2026, 1, 7, 15, 30))
+    assert_equal at(2026, 1, 8, 0, 0), build(type: "after_completion", cooldown_days: 1).cooldown_ends_at(at(2026, 1, 7, 23, 59))
+  end
+
+  test "after_completion cooldown_ends_at with cooldown_days uses the local date" do
+    assert_equal at(2026, 1, 9, 0, 0), build(type: "after_completion", cooldown_days: 1).cooldown_ends_at(Time.utc(2026, 1, 7, 15, 30))
+  end
+
+  test "after_completion due_ends_at is nil without a due key" do
+    assert_nil build(type: "after_completion", cooldown_days: 1).due_ends_at(at(2026, 6, 1, 0, 0))
+  end
+
+  test "after_completion due_ends_at with due_minutes" do
+    assert_equal at(2026, 1, 7, 16, 0), build(type: "after_completion", cooldown_minutes: 90, due_minutes: 30).due_ends_at(at(2026, 1, 7, 15, 30))
+  end
+
+  test "after_completion due_ends_at with due_days is the end of the day N counting the available day as 1" do
+    assert_equal at(2026, 7, 1, 0, 0), build(type: "after_completion", cooldown_days: 150, due_days: 30).due_ends_at(at(2026, 6, 1, 0, 0))
+    assert_equal at(2026, 1, 8, 0, 0), build(type: "after_completion", cooldown_minutes: 60, due_days: 1).due_ends_at(at(2026, 1, 7, 23, 30))
+  end
+
+  test "after_completion due_ends_at with due_days uses the local date" do
+    assert_equal at(2026, 1, 9, 0, 0), build(type: "after_completion", cooldown_minutes: 60, due_days: 1).due_ends_at(Time.utc(2026, 1, 7, 15, 30))
+  end
+
   test "after_completion validations" do
-    assert_invalid_rule :invalid_cooldown_minutes, { type: "after_completion" }
+    assert_invalid_rule :missing_cooldown, { type: "after_completion" }
     assert_invalid_rule :invalid_cooldown_minutes, { type: "after_completion", cooldown_minutes: 0 }
+    assert_invalid_rule :cooldown_minutes_and_days, { type: "after_completion", cooldown_minutes: 60, cooldown_days: 1 }
+    assert_invalid_rule :invalid_cooldown_days, { type: "after_completion", cooldown_days: 0 }
+    assert_invalid_rule :invalid_cooldown_days, { type: "after_completion", cooldown_days: "60" }
+    assert_invalid_rule :due_minutes_and_days, { type: "after_completion", cooldown_days: 1, due_minutes: 60, due_days: 1 }
+    assert_invalid_rule :invalid_due_minutes, { type: "after_completion", cooldown_days: 1, due_minutes: 0 }
+    assert_invalid_rule :invalid_due_days, { type: "after_completion", cooldown_days: 1, due_days: 1.5 }
     assert_invalid_rule :invalid_max_per_day, { type: "after_completion", cooldown_minutes: 60, max_per_day: 0 }
     assert_invalid_rule :unknown_key, { type: "after_completion", cooldown_minutes: 60, interval: 1 }
+  end
+
+  test "after_completion error messages are translated" do
+    [
+      { type: "after_completion" },
+      { type: "after_completion", cooldown_minutes: 60, cooldown_days: 1 },
+      { type: "after_completion", cooldown_days: 0 },
+      { type: "after_completion", cooldown_days: 1, due_minutes: 0 },
+      { type: "after_completion", cooldown_days: 1, due_days: 0 },
+      { type: "after_completion", cooldown_days: 1, due_minutes: 60, due_days: 1 }
+    ].each do |hash|
+      error = assert_raises(Recurrence::InvalidRule) { build(hash) }
+      assert_no_match(/translation missing/i, error.message, hash)
+    end
   end
 
   test "after_completion label" do
     assert_equal "完了から60分後", build(type: "after_completion", cooldown_minutes: 60).label
     assert_equal "完了から60分後（1日5回まで）", build(type: "after_completion", cooldown_minutes: 60, max_per_day: 5).label
+  end
+
+  test "after_completion label with cooldown_days and due" do
+    assert_equal "完了日から60日後", build(type: "after_completion", cooldown_days: 60).label
+    assert_equal "完了日から150日後（期限30日）", build(type: "after_completion", cooldown_days: 150, due_days: 30).label
+    assert_equal "完了から90分後（期限30分）（1日3回まで）", build(type: "after_completion", cooldown_minutes: 90, due_minutes: 30, max_per_day: 3).label
   end
 
   # presets

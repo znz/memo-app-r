@@ -130,11 +130,13 @@ class Reminder < ApplicationRecord
   end
 
   # No windows: starts_at enables, repeat_until ends, and prioritize_at is used as is
-  # (only the one hour rule without it). Expired also when the limit of the day or the cooldown lasts until repeat_until.
+  # (without it and without a deadline only the one hour rule). Expired also when the limit of the day or the cooldown
+  # lasts until repeat_until. With due_minutes / due_days it is active from when it became available until the deadline
+  # (prioritized automatically in that window), then overdue until completed.
   private def after_completion_status_at(now)
     repeat_limit = schedule.repeat_limit
     limit_reached = rule.max_per_day && completed_count_on(now) >= rule.max_per_day
-    cooldown_ends_at = last_completed_at && (last_completed_at + rule.cooldown_minutes.minutes)
+    cooldown_ends_at = last_completed_at && rule.cooldown_ends_at(last_completed_at)
     available_at = [now, (now.tomorrow.beginning_of_day if limit_reached), cooldown_ends_at].compact.max
     if starts_at && now < starts_at
       Status.new(state: :waiting, starts_at:)
@@ -145,9 +147,29 @@ class Reminder < ApplicationRecord
     elsif now < available_at
       Status.new(state: :cooling_down, starts_at: available_at)
     else
-      ends_at = [(now.end_of_day if rule.max_per_day), repeat_limit].compact.min
-      Status.new(state: :active, ends_at:, prioritize_at: effective_prioritize_at(prioritize_at, nil, ends_at))
+      after_completion_actionable_status(now, repeat_limit, cooldown_ends_at)
     end
+  end
+
+  # Active until the deadline (or the end of the day with max_per_day without one) or overdue after the deadline
+  private def after_completion_actionable_status(now, repeat_limit, cooldown_ends_at)
+    became_available_at = after_completion_became_available_at(cooldown_ends_at)
+    due_ends_at = became_available_at && rule.due_ends_at(became_available_at)
+    # Rules without a deadline keep no start (and end at the end of the day with max_per_day)
+    start = became_available_at if due_ends_at
+    if due_ends_at && now >= due_ends_at
+      Status.new(state: :overdue, starts_at: start, ends_at: due_ends_at, prioritize_at: effective_prioritize_at(prioritize_at, start, due_ends_at))
+    else
+      ends_at = [due_ends_at || (now.end_of_day if rule.max_per_day), repeat_limit].compact.min
+      Status.new(state: :active, starts_at: start, ends_at:, prioritize_at: effective_prioritize_at(prioritize_at, start, ends_at))
+    end
+  end
+
+  # When it became available, independent of now: the start, the end of the cooldown and the day after the limit of the day
+  # was reached (nil for an unsaved reminder without starts_at that was never completed)
+  private def after_completion_became_available_at(cooldown_ends_at)
+    limit_reached_on_last_day = rule.max_per_day && last_completed_at && completed_count >= rule.max_per_day
+    [starts_at || created_at, cooldown_ends_at, (last_completed_at.in_time_zone.tomorrow.beginning_of_day if limit_reached_on_last_day)].compact.max
   end
 
   private def windowed_status_at(now)
