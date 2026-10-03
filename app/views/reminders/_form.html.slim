@@ -16,7 +16,7 @@
     - %i[starts_at due_at prioritize_at repeat_until].each do |attribute|
       = f.input attribute, as: :datetime, html5: true, wrapper: :vertical_form, input_html: { include_seconds: false }
     = f.input :recurrence_preset, collection: recurrence_preset_options, include_blank: (t(:'.recurrence_unchanged') if @reminder.persisted?)
-    = f.input :recurrence_json, as: :text, input_html: { rows: 4, class: 'text-monospace' }
+    = f.input :recurrence_json, as: :recurrence_json, input_html: { rows: 4, class: 'text-monospace' }
     = f.input :latitude, as: :float
     = f.input :longitude, as: :float
     = f.input :radius_m

@@ -126,10 +126,32 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
       assert_select ".alert.alert-danger", "入力内容を確認してください:"
       assert_select ".reminder_name label abbr[title=?]", "必須", "*"
       assert_select ".reminder_name .invalid-feedback"
+      assert_select ".reminder_recurrence_json .invalid-feedback", count: 1
       assert_select ".reminder_recurrence_json .invalid-feedback", /JSONとして読み取れません/
-      assert_select "textarea[name=?]", "reminder[recurrence_json]", text: "{"
+      assert_select "textarea.is-invalid[name=?]", "reminder[recurrence_json]", text: "{"
       assert_select "input[type=checkbox][checked][name=?][value=?]", "reminder[memo_tags][]", "会議"
     end
+  end
+
+  test "should show the error of the rule given by JSON" do
+    assert_no_difference("Reminder.count") do
+      post reminders_url, params: { reminder: { name: "燻煙剤", recurrence_json: '{"type":"after_completion","due_days":30}' } }
+    end
+
+    assert_response :unprocessable_content
+    assert_select ".reminder_recurrence_json .invalid-feedback", count: 1
+    assert_select ".reminder_recurrence_json .invalid-feedback", "繰り返しにはcooldown_minutesかcooldown_daysを指定してください"
+    assert_select ".reminder_recurrence_json textarea.is-invalid + .invalid-feedback"
+    assert_select "textarea[name=?]", "reminder[recurrence_json]", text: '{"type":"after_completion","due_days":30}'
+  end
+
+  test "should not show an error of the rule when the rule is valid" do
+    post reminders_url, params: { reminder: { name: "", recurrence_json: '{"type":"after_completion","cooldown_days":60}' } }
+
+    assert_response :unprocessable_content
+    assert_select ".reminder_name .invalid-feedback"
+    assert_select ".reminder_recurrence_json .invalid-feedback", count: 0
+    assert_select "textarea.is-invalid[name=?]", "reminder[recurrence_json]", count: 0
   end
 
   test "should not create reminder with another user's tag" do
@@ -284,6 +306,15 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_content
     assert_select ".reminder_tags .invalid-feedback", /他のユーザーのタグは使えません/
     assert_equal [tags(:work)], @reminder.reload.tags.to_a
+  end
+
+  test "should show the error of the rule on update" do
+    patch reminder_url(@reminder), params: { reminder: { due_at: "", repeat_until: "", recurrence_preset: "", recurrence_json: '{"type":"daily","overdue":true}' } }
+
+    assert_response :unprocessable_content
+    assert_select ".reminder_recurrence_json .invalid-feedback", count: 1
+    assert_select ".reminder_recurrence_json .invalid-feedback", "繰り返しのoverdueは実行可能期限か繰り返し終了日時と一緒に指定してください"
+    assert_equal({ "type" => "weekly", "weekdays" => [1, 2, 3, 4, 5] }, @reminder.reload.recurrence)
   end
 
   test "should keep the JSON of the saved rule when an update with a preset fails" do
