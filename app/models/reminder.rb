@@ -21,6 +21,7 @@ class Reminder < ApplicationRecord
 
   before_validation :assign_recurrence_input
   before_validation :assign_lonlat
+  before_save :forget_edited_completion, if: -> { will_save_change_to_last_completed_at? && !will_save_change_to_previous_completion? }
   after_save :clear_coordinates_assigned
 
   validates :name, presence: true
@@ -230,6 +231,24 @@ class Reminder < ApplicationRecord
 
   private def completion_state
     { "last_completed_at" => last_completed_at&.iso8601(6), "completed_count" => completed_count }
+  end
+
+  # last_completed_at changed by other than complete! / undo_complete! (both change previous_completion), e.g. on the form:
+  # the completion cannot be undone, and completed_count (completions on the local date of last_completed_at) follows it
+  # unless given too
+  private def forget_edited_completion
+    self.previous_completion = nil
+    return if will_save_change_to_completed_count?
+
+    before, after = last_completed_at_change_to_be_saved
+    self.completed_count =
+      if after.nil?
+        0
+      elsif before && before.to_date == after.to_date
+        [completed_count, 1].max
+      else
+        1
+      end
   end
 
   private def clear_coordinates_assigned

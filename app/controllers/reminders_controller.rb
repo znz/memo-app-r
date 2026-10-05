@@ -72,7 +72,7 @@ class RemindersController < ApplicationController
   def reminder_params
     params.expect(reminder: [
       :name, :description, :memo_template, :enabled, :starts_at, :due_at, :prioritize_at, :repeat_until,
-      :recurrence_preset, :recurrence_json, :latitude, :longitude, :radius_m, memo_tags: [], tag_ids: []
+      :recurrence_preset, :recurrence_json, :last_completed_at, :latitude, :longitude, :radius_m, memo_tags: [], tag_ids: []
     ])
   end
 
@@ -85,7 +85,14 @@ class RemindersController < ApplicationController
   def update_params
     attributes = reminder_params
     attributes.delete(:recurrence_json) if attributes[:recurrence_preset].present? && current_rule_json?(attributes[:recurrence_json])
+    attributes.delete(:last_completed_at) if attributes.key?(:last_completed_at) && current_last_completed_at?(attributes[:last_completed_at])
     attributes
+  end
+
+  # The input has no seconds: the saved time left as is would be truncated to the minute (and no longer undoable)
+  def current_last_completed_at?(value)
+    saved = @reminder.last_completed_at
+    saved.present? && Reminder.type_for_attribute(:last_completed_at).cast(value) == saved.beginning_of_minute
   end
 
   def current_rule_json?(json)

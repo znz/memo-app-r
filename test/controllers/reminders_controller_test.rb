@@ -91,6 +91,8 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
         assert_select "option[selected][value=none]", "単発"
       end
       assert_select "textarea[name=?]", "reminder[recurrence_json]"
+      assert_select ".reminder_recurrence_json + .reminder_last_completed_at input[type=datetime-local][name=?]", "reminder[last_completed_at]"
+      assert_select ".reminder_last_completed_at small", /空にすると未完了に戻ります/
       assert_select "input[type=number][name=?]", "reminder[latitude]"
       assert_select "input[type=number][name=?]", "reminder[longitude]"
       assert_select "input[type=number][name=?][value=?]", "reminder[radius_m]", "200"
@@ -388,6 +390,75 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".reminder_name .invalid-feedback"
     assert_select "select[name=?] option[selected][value=daily]", "reminder[recurrence_preset]"
     assert_select "textarea[name=?]", "reminder[recurrence_json]", text: JSON.pretty_generate(@reminder.recurrence)
+  end
+
+  test "edit shows last_completed_at" do
+    @reminder.update!(last_completed_at: Time.zone.local(2026, 1, 7, 9, 15, 30))
+    get edit_reminder_url(@reminder)
+    assert_select "input[type=datetime-local][name=?][value=?]", "reminder[last_completed_at]", "2026-01-07T09:15"
+  end
+
+  test "should create reminder with last_completed_at" do
+    post reminders_url, params: { reminder: {
+      name: "燻煙剤", recurrence_preset: "", recurrence_json: '{"type":"after_completion","cooldown_days":60}',
+      last_completed_at: "2025-12-01T10:00"
+    } }
+
+    reminder = users(:one).reminders.find_by!(name: "燻煙剤")
+    assert_redirected_to reminder_url(reminder)
+    assert_equal Time.zone.local(2025, 12, 1, 10, 0), reminder.last_completed_at
+    assert_equal 1, reminder.completed_count
+    assert_equal :cooling_down, reminder.status_at.state
+  end
+
+  test "should update last_completed_at" do
+    reminder = reminders(:water)
+    reminder.complete!
+    patch reminder_url(reminder), params: { reminder: { last_completed_at: "2026-01-06T20:30" } }
+
+    assert_redirected_to reminder_url(reminder)
+    reminder.reload
+    assert_equal Time.zone.local(2026, 1, 6, 20, 30), reminder.last_completed_at
+    assert_equal 1, reminder.completed_count
+    assert_not_predicate reminder, :undoable?
+  end
+
+  test "should clear last_completed_at" do
+    reminder = reminders(:water)
+    reminder.complete!
+    patch reminder_url(reminder), params: { reminder: { last_completed_at: "" } }
+
+    assert_redirected_to reminder_url(reminder)
+    reminder.reload
+    assert_nil reminder.last_completed_at
+    assert_equal 0, reminder.completed_count
+    assert_not_predicate reminder, :undoable?
+  end
+
+  test "updating with last_completed_at left as is keeps the exact time and the completion undoable" do
+    travel_to Time.zone.local(2026, 1, 7, 12, 0, 30, 123456)
+    reminder = reminders(:water)
+    reminder.complete!
+    completed_at = reminder.last_completed_at
+    travel 10.minutes
+    patch reminder_url(reminder), params: { reminder: { name: "白湯を飲む", last_completed_at: "2026-01-07T12:00" } }
+
+    assert_redirected_to reminder_url(reminder)
+    reminder.reload
+    assert_equal "白湯を飲む", reminder.name
+    assert_equal completed_at, reminder.last_completed_at
+    assert_equal 1, reminder.completed_count
+    assert_predicate reminder, :undoable?
+  end
+
+  test "updating with an unparsable last_completed_at does not raise" do
+    reminder = reminders(:water)
+    reminder.complete!
+    patch reminder_url(reminder), params: { reminder: { last_completed_at: "2026-13-45T99:99" } }
+    assert_redirected_to reminder_url(reminder)
+
+    patch reminder_url(reminder), params: { reminder: { last_completed_at: "abc" } }
+    assert_redirected_to reminder_url(reminder)
   end
 
   test "should destroy reminder" do

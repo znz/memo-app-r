@@ -17,6 +17,7 @@
       = f.input attribute, as: :datetime, html5: true, wrapper: :vertical_form, input_html: { include_seconds: false }
     = f.input :recurrence_preset, collection: recurrence_preset_options, include_blank: (t(:'.recurrence_unchanged') if @reminder.persisted?)
     = f.input :recurrence_json, as: :recurrence_json, input_html: { rows: 4, class: 'text-monospace' }
+    = f.input :last_completed_at, as: :datetime, html5: true, wrapper: :vertical_form, input_html: { include_seconds: false }
     = f.input :latitude, as: :float
     = f.input :longitude, as: :float
     = f.input :radius_m

@@ -740,6 +740,112 @@ class ReminderTest < ActiveSupport::TestCase
     assert_equal 1, reminder.reload.completed_count
   end
 
+  # editing the completion
+
+  test "editing last_completed_at to another date resets completed_count to 1" do
+    reminder = reminders(:water)
+    reminder.update!(last_completed_at: at(2026, 1, 7, 10, 0), completed_count: 3)
+    reminder.update!(last_completed_at: at(2026, 1, 6, 10, 0))
+    assert_equal 1, reminder.reload.completed_count
+  end
+
+  test "editing last_completed_at on the same local date keeps completed_count" do
+    reminder = reminders(:water)
+    reminder.update!(last_completed_at: at(2026, 1, 7, 10, 0), completed_count: 3)
+    reminder.update!(last_completed_at: at(2026, 1, 7, 23, 59))
+    assert_equal 3, reminder.reload.completed_count
+  end
+
+  test "editing last_completed_at on the same local date makes completed_count at least 1" do
+    reminder = reminders(:water)
+    reminder.update!(last_completed_at: at(2026, 1, 7, 10, 0), completed_count: 0)
+    reminder.update!(last_completed_at: at(2026, 1, 7, 0, 0))
+    assert_equal 1, reminder.reload.completed_count
+  end
+
+  test "clearing last_completed_at resets completed_count to 0" do
+    reminder = reminders(:water)
+    reminder.update!(last_completed_at: at(2026, 1, 7, 10, 0), completed_count: 3)
+    reminder.update!(last_completed_at: nil)
+    assert_equal 0, reminder.reload.completed_count
+  end
+
+  test "setting last_completed_at first makes completed_count 1" do
+    reminder = reminders(:water)
+    reminder.update!(last_completed_at: at(2026, 1, 7, 10, 0))
+    assert_equal 1, reminder.reload.completed_count
+
+    reminder = new_reminder(last_completed_at: at(2026, 1, 7, 10, 0))
+    reminder.save!
+    assert_equal 1, reminder.reload.completed_count
+  end
+
+  test "completed_count given with last_completed_at is kept" do
+    reminder = reminders(:water)
+    reminder.update!(last_completed_at: at(2026, 1, 7, 10, 0), completed_count: 3)
+    reminder.update!(last_completed_at: at(2026, 1, 6, 10, 0), completed_count: 2)
+    assert_equal 2, reminder.reload.completed_count
+  end
+
+  test "editing last_completed_at makes the completion not undoable" do
+    reminder = reminders(:water)
+    travel_to(at(2026, 1, 7, 12, 0)) do
+      reminder.complete!
+      reminder.update!(last_completed_at: at(2026, 1, 7, 11, 0))
+      assert_nil reminder.reload.previous_completion
+      assert_not_predicate reminder, :undoable?
+      assert_not reminder.undo_complete!(reminder.last_completed_at.iso8601(6))
+    end
+    assert_equal at(2026, 1, 7, 11, 0), reminder.reload.last_completed_at
+  end
+
+  test "editing other attributes keeps the completion undoable" do
+    reminder = reminders(:water)
+    travel_to(at(2026, 1, 7, 12, 0)) do
+      reminder.complete!
+      reminder.update!(name: "白湯を飲む")
+      assert_predicate reminder.reload, :undoable?
+    end
+  end
+
+  test "complete! and undo_complete! keep their completed_count" do
+    reminder = reminders(:water)
+    reminder.complete!(at(2026, 1, 7, 12, 0))
+    reminder.complete!(at(2026, 1, 7, 13, 0))
+    assert_equal 2, reminder.reload.completed_count
+    travel_to(at(2026, 1, 7, 13, 30)) do
+      assert reminder.undo_complete!(reminder.last_completed_at.iso8601(6))
+    end
+    reminder.reload
+    assert_equal 1, reminder.completed_count
+    assert_equal at(2026, 1, 7, 12, 0), reminder.last_completed_at
+  end
+
+  test "complete! on different days and undo_complete! keep the count of each day" do
+    reminder = reminders(:water)
+    reminder.complete!(at(2026, 1, 6, 12, 0))
+    reminder.complete!(at(2026, 1, 7, 12, 0))
+    assert_equal 1, reminder.reload.completed_count
+    travel_to(at(2026, 1, 7, 12, 30)) do
+      assert reminder.undo_complete!(reminder.last_completed_at.iso8601(6))
+    end
+    reminder.reload
+    assert_equal 1, reminder.completed_count
+    assert_equal at(2026, 1, 6, 12, 0), reminder.last_completed_at
+  end
+
+  test "undo_complete! restores a time at second 0 of the same minute" do
+    reminder = reminders(:water)
+    reminder.update!(last_completed_at: at(2026, 1, 7, 12, 0), completed_count: 2)
+    travel_to(at(2026, 1, 7, 12, 0, 30)) do
+      reminder.complete!
+      assert reminder.undo_complete!(reminder.last_completed_at.iso8601(6))
+    end
+    reminder.reload
+    assert_equal at(2026, 1, 7, 12, 0), reminder.last_completed_at
+    assert_equal 2, reminder.completed_count
+  end
+
   # coordinates
 
   test "latitude and longitude are read from lonlat" do
