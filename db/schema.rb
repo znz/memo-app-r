@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_27_020720) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_05_150131) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
@@ -53,6 +53,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_020720) do
     t.string "memo_tags", default: [], null: false, array: true
     t.text "memo_template"
     t.string "name", null: false
+    t.jsonb "previous_completion"
     t.datetime "prioritize_at"
     t.integer "radius_m", default: 200, null: false
     t.jsonb "recurrence", default: {"type" => "none"}, null: false

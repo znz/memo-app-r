@@ -169,6 +169,7 @@ ja:
       distance: '約 %{distance}m'
     undo:
       button: '取り消す'
+      completion_button: '完了を取り消す'
     form:
       new_memo_tag: 'メモに付ける新規タグ'
       recurrence_unchanged: '（変更しない）'

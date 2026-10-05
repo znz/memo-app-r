@@ -436,9 +436,8 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_memo_url(reminder_id: reminder.to_param)
     assert_equal "「昼の薬」を完了しました。", flash[:notice]
-    assert_equal undo_complete_reminder_path(reminder), flash[:undo]["path"]
-    assert_predicate flash[:undo]["token"], :present?
     reminder.reload
+    assert_equal({ "path" => undo_complete_reminder_path(reminder), "completed_at" => reminder.last_completed_at.iso8601(6) }, flash[:undo])
     assert_equal Time.current, reminder.last_completed_at
     assert_equal 1, reminder.completed_count
   end
@@ -446,13 +445,12 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
   test "the new memo page after completion is prefilled and has a button to undo" do
     reminder = reminders(:lunch_medicine)
     post complete_reminder_url(reminder)
-    token = flash[:undo]["token"]
     follow_redirect!
 
     assert_response :success
     assert_select ".alert", /「昼の薬」を完了しました。/ do
       assert_select "form[action=?]", undo_complete_reminder_path(reminder) do
-        assert_select "input[type=hidden][name=token][value=?]", token
+        assert_select "input[type=hidden][name=completed_at][value=?]", reminder.reload.last_completed_at.iso8601(6)
         assert_select "button.btn", "取り消す"
       end
     end
@@ -466,11 +464,11 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     reminder = reminders(:water)
     reminder.update!(last_completed_at: 2.hours.ago, completed_count: 3)
     post complete_reminder_url(reminder)
-    token = flash[:undo]["token"]
+    completed_at = flash[:undo]["completed_at"]
     follow_redirect!
     assert_equal 4, reminder.reload.completed_count
 
-    post undo_complete_reminder_url(reminder), params: { token: }
+    post undo_complete_reminder_url(reminder), params: { completed_at: }
 
     assert_redirected_to new_memo_url
     assert_equal "「水を飲む」の完了を取り消しました。", flash[:notice]
@@ -480,60 +478,70 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_equal 3, reminder.completed_count
   end
 
-  test "should not undo the completion with an expired token" do
+  test "should undo the completion without the flash" do
     reminder = reminders(:water)
-    token = travel_to(2.hours.ago) { reminder.complete! }
+    reminder.complete!
+    travel 59.minutes
 
-    post undo_complete_reminder_url(reminder), params: { token: }
+    post undo_complete_reminder_url(reminder), params: { completed_at: reminder.last_completed_at.iso8601(6) }
+
+    assert_redirected_to new_memo_url
+    assert_equal "「水を飲む」の完了を取り消しました。", flash[:notice]
+    reminder.reload
+    assert_nil reminder.last_completed_at
+    assert_equal 0, reminder.completed_count
+  end
+
+  test "should not undo the completion after UNDO_EXPIRES_IN" do
+    reminder = reminders(:water)
+    travel_to(2.hours.ago) { reminder.complete! }
+
+    post undo_complete_reminder_url(reminder), params: { completed_at: reminder.last_completed_at.iso8601(6) }
 
     assert_redirected_to new_memo_url
     assert_equal "「水を飲む」の完了を取り消せませんでした。取り消しは完了から1時間以内に限ります。", flash[:alert]
     assert_equal 1, reminder.reload.completed_count
   end
 
-  test "should not undo the completion with a tampered or missing token" do
+  test "should not undo the completion with a wrong, missing or not a string completed_at" do
     reminder = reminders(:water)
-    token = reminder.complete!
+    reminder.complete!
 
-    post undo_complete_reminder_url(reminder), params: { token: token.sub(/--\h/) { it.succ } }
+    post undo_complete_reminder_url(reminder), params: { completed_at: 1.second.ago.iso8601(6) }
     assert_predicate flash[:alert], :present?
 
     post undo_complete_reminder_url(reminder)
     assert_predicate flash[:alert], :present?
 
-    post undo_complete_reminder_url(reminder), params: { token: { "a" => "b" } }
+    post undo_complete_reminder_url(reminder), params: { completed_at: "" }
+    assert_predicate flash[:alert], :present?
+
+    post undo_complete_reminder_url(reminder), params: { completed_at: { "a" => "b" } }
     assert_predicate flash[:alert], :present?
     assert_equal 1, reminder.reload.completed_count
   end
 
-  test "should not undo the completion with a token already used" do
+  test "should not undo the completion already undone or completed again" do
     reminder = reminders(:water)
     post complete_reminder_url(reminder)
-    token = flash[:undo]["token"]
-    post undo_complete_reminder_url(reminder), params: { token: }
+    completed_at = flash[:undo]["completed_at"]
+    post undo_complete_reminder_url(reminder), params: { completed_at: }
     assert_equal 0, reminder.reload.completed_count
+
+    post undo_complete_reminder_url(reminder), params: { completed_at: }
+    assert_predicate flash[:alert], :present?
+
     travel 1.minute
     post complete_reminder_url(reminder)
     travel 1.minute
     post complete_reminder_url(reminder)
     assert_equal 2, reminder.reload.completed_count
 
-    post undo_complete_reminder_url(reminder), params: { token: }
+    post undo_complete_reminder_url(reminder), params: { completed_at: }
 
     assert_redirected_to new_memo_url
     assert_predicate flash[:alert], :present?
     assert_equal 2, reminder.reload.completed_count
-  end
-
-  test "should not undo the completion with a token of another reminder" do
-    token = reminders(:lunch_medicine).complete!
-    reminder = reminders(:water)
-    reminder.complete!
-
-    post undo_complete_reminder_url(reminder), params: { token: }
-
-    assert_predicate flash[:alert], :present?
-    assert_equal 1, reminder.reload.completed_count
   end
 
   test "should not complete another user's reminder" do
@@ -544,12 +552,65 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
 
   test "should not undo the completion of another user's reminder" do
     other = reminders(:others_reminder)
-    token = other.complete!
+    other.complete!
 
-    post undo_complete_reminder_url(other), params: { token: }
+    post undo_complete_reminder_url(other), params: { completed_at: other.last_completed_at.iso8601(6) }
 
     assert_response :not_found
     assert_equal 1, other.reload.completed_count
+  end
+
+  test "index and show have a button to undo the completion while undoable" do
+    reminder = reminders(:lunch_medicine)
+    get reminders_url
+    assert_select "form[action=?]", undo_complete_reminder_path(reminder), count: 0
+    get reminder_url(reminder)
+    assert_select "form[action=?]", undo_complete_reminder_path(reminder), count: 0
+
+    reminder.complete!
+    completed_at = reminder.last_completed_at.iso8601(6)
+    get reminders_url
+    assert_select "tr##{ActionView::RecordIdentifier.dom_id(reminder)} form[action=?]", undo_complete_reminder_path(reminder) do
+      assert_select "input[type=hidden][name=completed_at][value=?]", completed_at
+      assert_select "button", "完了を取り消す"
+    end
+    get reminder_url(reminder)
+    assert_select "form[action=?]", undo_complete_reminder_path(reminder) do
+      assert_select "input[type=hidden][name=completed_at][value=?]", completed_at
+      assert_select "button", "完了を取り消す"
+    end
+
+    travel 1.hour
+    get reminders_url
+    assert_select "form[action=?]", undo_complete_reminder_path(reminder), count: 0
+    get reminder_url(reminder)
+    assert_select "form[action=?]", undo_complete_reminder_path(reminder), count: 0
+  end
+
+  test "index and show have the buttons to complete and to undo a reminder still actionable" do
+    reminder = reminders(:water)
+    reminder.update!(recurrence: { "type" => "after_completion", "cooldown_minutes" => 1, "max_per_day" => 8 })
+    reminder.complete!
+    travel 1.minute
+
+    get reminders_url
+    assert_select "tr##{ActionView::RecordIdentifier.dom_id(reminder)}" do
+      assert_select "form[action=?]", complete_reminder_path(reminder)
+      assert_select "form[action=?]", undo_complete_reminder_path(reminder)
+    end
+    get reminder_url(reminder)
+    assert_select "form[action=?]", complete_reminder_path(reminder)
+    assert_select "form[action=?]", undo_complete_reminder_path(reminder)
+  end
+
+  test "undoing from the list or the detail page goes to the new memo page" do
+    reminder = reminders(:water)
+    reminder.complete!
+    get reminders_url
+    post undo_complete_reminder_url(reminder), params: { completed_at: reminder.last_completed_at.iso8601(6) }, headers: { "Referer" => reminders_url }
+
+    assert_redirected_to new_memo_url
+    assert_equal "「水を飲む」の完了を取り消しました。", flash[:notice]
   end
 
   test "index and show have buttons to complete" do

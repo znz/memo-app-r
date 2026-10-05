@@ -35,5 +35,7 @@ table.table
           => link_to t(:'.edit'), edit_reminder_path(reminder)
           - if reminder.status_at(now).actionable?
             = button_to t(:'.complete'), complete_reminder_path(reminder), class: 'btn btn-sm btn-outline-success', form_class: 'd-inline'
+          - if reminder.undoable?(now)
+            =< button_to t(:'reminders.undo.completion_button'), undo_complete_reminder_path(reminder), params: { completed_at: reminder.last_completed_at.iso8601(6) }, class: 'btn btn-sm btn-outline-dark', form_class: 'd-inline'
 
 = link_to t(:'.new'), new_reminder_path, accesskey: 'N'

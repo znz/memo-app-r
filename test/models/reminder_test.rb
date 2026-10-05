@@ -622,64 +622,121 @@ class ReminderTest < ActiveSupport::TestCase
     assert_equal({ content: "日報", tags: [] }, reminders(:work_report).memo_attributes)
   end
 
+  test "complete! keeps the state before the completion" do
+    reminder = reminders(:water)
+    previous = Time.zone.local(2026, 1, 7, 10, 0, 5, 123456)
+    reminder.update!(last_completed_at: previous, completed_count: 3)
+    reminder.complete!(at(2026, 1, 7, 12, 0))
+    expected = { "last_completed_at" => previous.iso8601(6), "completed_count" => 3 }
+    assert_equal expected, reminder.reload.previous_completion
+  end
+
+  test "complete! keeps the state of a reminder never completed" do
+    reminder = reminders(:water)
+    assert_nil reminder.previous_completion
+    reminder.complete!(at(2026, 1, 7, 12, 0))
+    assert_equal({ "last_completed_at" => nil, "completed_count" => 0 }, reminder.reload.previous_completion)
+  end
+
+  test "undoable? within UNDO_EXPIRES_IN after the completion" do
+    reminder = reminders(:water)
+    assert_not reminder.undoable?(at(2026, 1, 7, 12, 0))
+    reminder.complete!(at(2026, 1, 7, 12, 0))
+    assert reminder.undoable?(at(2026, 1, 7, 12, 59, 59))
+    assert_not reminder.undoable?(at(2026, 1, 7, 13, 0))
+  end
+
+  test "undoable? uses the current time by default" do
+    reminder = reminders(:water)
+    travel_to(at(2026, 1, 7, 12, 0)) do
+      reminder.complete!
+      assert_predicate reminder, :undoable?
+      travel 1.hour
+      assert_not_predicate reminder, :undoable?
+    end
+  end
+
   test "undo_complete! restores the state before the completion" do
     reminder = reminders(:water)
     previous = Time.zone.local(2026, 1, 7, 10, 0, 5, 123456)
     reminder.update!(last_completed_at: previous, completed_count: 3)
-    token = reminder.complete!(at(2026, 1, 7, 12, 0))
-    assert reminder.undo_complete!(token)
+    travel_to(at(2026, 1, 7, 12, 0)) do
+      reminder.complete!
+      assert reminder.undo_complete!(reminder.last_completed_at.iso8601(6))
+    end
     reminder.reload
     assert_equal previous, reminder.last_completed_at
     assert_equal 3, reminder.completed_count
+    assert_nil reminder.previous_completion
   end
 
   test "undo_complete! restores a reminder never completed" do
     reminder = reminders(:water)
-    token = reminder.complete!(at(2026, 1, 7, 12, 0))
-    assert reminder.undo_complete!(token)
+    travel_to(at(2026, 1, 7, 12, 0)) do
+      reminder.complete!
+      assert reminder.undo_complete!(reminder.last_completed_at.iso8601(6))
+    end
     reminder.reload
     assert_nil reminder.last_completed_at
     assert_equal 0, reminder.completed_count
+    assert_not reminder.undoable?(at(2026, 1, 7, 12, 0))
   end
 
-  test "undo token is rejected once the completion is changed" do
+  test "undo_complete! is rejected once undone or completed again" do
     reminder = reminders(:water)
-    token = reminder.complete!(at(2026, 1, 7, 12, 0))
-    assert reminder.undo_complete!(token)
-    assert_not reminder.undo_complete!(token)
-    reminder.complete!(at(2026, 1, 7, 12, 10))
-    reminder.complete!(at(2026, 1, 7, 12, 20))
-    assert_not reminder.undo_complete!(token)
+    travel_to(at(2026, 1, 7, 12, 0)) do
+      reminder.complete!
+      completed_at = reminder.last_completed_at.iso8601(6)
+      assert reminder.undo_complete!(completed_at)
+      assert_not reminder.undo_complete!(completed_at)
+      travel 10.minutes
+      reminder.complete!
+      travel 10.minutes
+      reminder.complete!
+      assert_not reminder.undo_complete!(completed_at)
+    end
     reminder.reload
     assert_equal 2, reminder.completed_count
     assert_equal at(2026, 1, 7, 12, 20), reminder.last_completed_at
   end
 
-  test "undo token expires" do
+  test "undo_complete! undoes only the last completion" do
     reminder = reminders(:water)
     travel_to(at(2026, 1, 7, 12, 0)) do
-      token = reminder.complete!
+      reminder.complete!
+      travel 10.minutes
+      reminder.complete!
+      assert reminder.undo_complete!(reminder.last_completed_at.iso8601(6))
+      assert_not_predicate reminder, :undoable?
+      assert_not reminder.undo_complete!(reminder.last_completed_at.iso8601(6))
+    end
+    reminder.reload
+    assert_equal 1, reminder.completed_count
+    assert_equal at(2026, 1, 7, 12, 0), reminder.last_completed_at
+  end
+
+  test "undo_complete! expires" do
+    reminder = reminders(:water)
+    travel_to(at(2026, 1, 7, 12, 0)) do
+      reminder.complete!
       travel 61.minutes
-      assert_not reminder.undo_complete!(token)
+      assert_not reminder.undo_complete!(reminder.last_completed_at.iso8601(6))
     end
     assert_equal 1, reminder.reload.completed_count
   end
 
-  test "undo token of another reminder is rejected" do
-    token = reminders(:github_streak).complete!(at(2026, 1, 7, 12, 0))
+  test "undo_complete! is rejected with another time, a blank or a value not a string" do
     reminder = reminders(:water)
-    reminder.complete!(at(2026, 1, 7, 12, 0))
-    assert_not reminder.undo_complete!(token)
-    assert_equal 1, reminder.reload.completed_count
-  end
-
-  test "tampered or blank undo token is rejected" do
-    reminder = reminders(:water)
-    token = reminder.complete!(at(2026, 1, 7, 12, 0))
-    assert_not reminder.undo_complete!("#{token}x")
-    assert_not reminder.undo_complete!(token.reverse)
-    assert_not reminder.undo_complete!("")
-    assert_not reminder.undo_complete!(nil)
+    travel_to(at(2026, 1, 7, 12, 0)) do
+      reminder.complete!
+      completed_at = reminder.last_completed_at
+      assert_not reminder.undo_complete!((completed_at - 1.second).iso8601(6))
+      assert_not reminder.undo_complete!(completed_at.iso8601)
+      assert_not reminder.undo_complete!(completed_at)
+      assert_not reminder.undo_complete!({ "a" => "b" })
+      assert_not reminder.undo_complete!("")
+      assert_not reminder.undo_complete!(nil)
+    end
     assert_equal 1, reminder.reload.completed_count
   end
 
