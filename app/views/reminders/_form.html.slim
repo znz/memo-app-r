@@ -11,7 +11,7 @@
       label.form-control-label.string.optional for='reminder_new_memo_tag'
         = t(:'.new_memo_tag')
       = text_field_tag 'reminder[memo_tags][]', nil, id: 'reminder_new_memo_tag', class: 'form-control string optional'
-    = f.association :tags, as: :check_boxes, collection: current_user.tags.order(:name), wrapper: :vertical_collection_inline
+    = f.association :tags, as: :check_boxes, collection: current_user.tags.order(:name), label_method: ->(tag_record) { theme_badge(tag_record.name, tag_record.color) }, wrapper: :vertical_collection_inline
     = f.input :enabled
     - %i[starts_at due_at prioritize_at repeat_until].each do |attribute|
       = f.input attribute, as: :datetime, html5: true, wrapper: :vertical_form, input_html: { include_seconds: false }

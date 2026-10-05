@@ -60,6 +60,29 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "new and edit show the tags of the reminder as colored badges" do
+    [new_reminder_url, edit_reminder_url(@reminder)].each do |url|
+      get url
+      assert_response :success
+      assert_select "label[for=?] span.badge.badge-primary", "reminder_tag_ids_#{tags(:work).id}", "仕事"
+      assert_select "label[for=?] span.badge.badge-success", "reminder_tag_ids_#{tags(:health).id}", "健康"
+      assert_select "label[for=?]", "reminder_tag_ids_#{tags(:work).id}", text: /span/, count: 0
+    end
+  end
+
+  test "badges of the tags on the form escape the name" do
+    tag = users(:one).tags.create!(name: "<b>x</b>", color: "danger")
+    get new_reminder_url
+    assert_select "label[for=?] span.badge.badge-danger", "reminder_tag_ids_#{tag.id}", "<b>x</b>"
+    assert_select "label[for=?] b", "reminder_tag_ids_#{tag.id}", count: 0
+  end
+
+  test "memo_tags check boxes are not badges" do
+    get new_reminder_url
+    assert_select "label[for=?]", "reminder_memo_tags_tag1", "tag1"
+    assert_select "label[for=?] span.badge", "reminder_memo_tags_tag1", count: 0
+  end
+
   test "should get new with the location of a memo" do
     get new_reminder_url(reminder: { latitude: "35.6817", longitude: "139.7671", name: "ignored" })
     assert_response :success
