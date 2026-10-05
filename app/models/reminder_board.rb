@@ -5,11 +5,13 @@ class ReminderBoard
   Item = Data.define(:reminder, :status)
 
   # hidden_tag_ids: ids (strings) of the tags hidden on this device
-  def initialize(reminders, now: Time.current, hidden_tag_ids: [])
+  # hide_by_tags: false keeps the reminders with a disabled or hidden tag (for the list of all the reminders)
+  def initialize(reminders, now: Time.current, hidden_tag_ids: [], hide_by_tags: true)
     @now = now
     @hidden_tag_ids = Array(hidden_tag_ids).map(&:to_s)
-    @items = reminders
-      .reject { hidden?(it) }
+    @reminders = reminders.to_a
+    @items = @reminders
+      .reject { hide_by_tags && hidden?(it) }
       .map { Item.new(reminder: it, status: it.status_at(now)) }
       .select { it.status.actionable? }
   end
@@ -30,6 +32,13 @@ class ReminderBoard
 
   # In the order of the given reminders (distance order of Reminder.near)
   def nearby = @items
+
+  # All the given reminders: the actionable ones as on the new memo page (prioritized, then active),
+  # then the others in the given order
+  def all_in_order
+    actionable = (prioritized + active).map(&:reminder)
+    actionable + (@reminders - actionable)
+  end
 
   private def hidden?(reminder)
     reminder.tags.any? { !it.enabled? || @hidden_tag_ids.include?(it.id) }

@@ -27,6 +27,45 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_select "a", text: reminders(:others_reminder).name, count: 0
   end
 
+  private def row_ids = css_select("tbody tr").pluck("id")
+
+  private def dom_ids(*names) = names.map { ActionView::RecordIdentifier.dom_id(reminders(it)) }
+
+  test "index is sorted by name by default or with an unknown sort" do
+    expected = users(:one).reminders.order(:name).map { ActionView::RecordIdentifier.dom_id(it) }
+    get reminders_url
+    assert_equal expected, row_ids
+
+    get reminders_url(sort: "unknown")
+    assert_equal expected, row_ids
+  end
+
+  test "index sorted like the new memo page has the actionable reminders first, including the hidden ones" do
+    cookies[:hidden_tag_ids] = tags(:work).id
+    get reminders_url(sort: "board")
+    assert_response :success
+    actionable = dom_ids(:tax_papers, :start_now, :weigh_in, :lunch_medicine,
+      :work_report, :water, :github_streak, :archived_hobby, :recorded_show, :far_shinjuku, :near_station)
+    others = users(:one).reminders.order(:name).map { ActionView::RecordIdentifier.dom_id(it) } & dom_ids(:paused, :mwf_gym, :second_tuesday)
+    assert_equal actionable + others, row_ids
+  end
+
+  test "index has a switch of the order" do
+    get reminders_url
+    assert_select ".reminders-sort", /並び順:/ do
+      assert_select "strong", "名前順"
+      assert_select "a", count: 1
+      assert_select "a[href=?]", reminders_path(sort: "board"), "未完了を新規メモ画面と同じ順に"
+    end
+
+    get reminders_url(sort: "board")
+    assert_select ".reminders-sort" do
+      assert_select "strong", "未完了を新規メモ画面と同じ順に"
+      assert_select "a", count: 1
+      assert_select "a[href=?]", reminders_path, "名前順"
+    end
+  end
+
   test "nav has a link to reminders" do
     get reminders_url
     assert_select "nav li.active a.nav-link[href=?]", reminders_path, text: /リマインダー/

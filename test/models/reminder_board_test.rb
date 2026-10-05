@@ -95,6 +95,29 @@ class ReminderBoardTest < ActiveSupport::TestCase
     assert_includes names(board.active), reminders(:github_streak).name
   end
 
+  test "all_in_order has the actionable reminders in the order of the board, then the others in the given order" do
+    reminders = users(:one).reminders.includes(:tags).order(:name)
+    board = ReminderBoard.new(reminders, now: @now, hidden_tag_ids: [tags(:work).id], hide_by_tags: false)
+    actionable = %i[tax_papers start_now weigh_in lunch_medicine work_report water github_streak archived_hobby recorded_show far_shinjuku near_station]
+    others = reminders.map(&:name) & %i[paused mwf_gym second_tuesday].map { reminders(it).name }
+    assert_equal actionable.map { reminders(it).name } + others, board.all_in_order.map(&:name)
+  end
+
+  test "all_in_order has a reminder done among the others in the given order" do
+    reminders(:weigh_in).complete!(@now - 1.hour)
+    reminders = users(:one).reminders.includes(:tags).order(:name)
+    board = ReminderBoard.new(reminders, now: @now, hide_by_tags: false)
+    assert_equal %i[tax_papers start_now lunch_medicine].map { reminders(it).name }, board.all_in_order.first(3).map(&:name)
+    others = reminders.map(&:name) & %i[paused mwf_gym second_tuesday weigh_in].map { reminders(it).name }
+    assert_equal others, board.all_in_order.last(4).map(&:name)
+  end
+
+  test "reminders with a hidden or disabled tag are on the board without hide_by_tags" do
+    board = ReminderBoard.new(users(:one).reminders.includes(:tags), now: @now, hidden_tag_ids: [tags(:work).id], hide_by_tags: false)
+    assert_includes names(board.active), reminders(:work_report).name
+    assert_includes names(board.active), reminders(:archived_hobby).name
+  end
+
   test "nearby keeps the order of the relation and only actionable reminders" do
     point = Memo.new(lonlat: "POINT(139.7671 35.6812)").lonlat
     closer = users(:one).reminders.create!(name: "改札", lonlat: "POINT(139.7671 35.6813)", starts_at: @now - 1.day)

@@ -1,6 +1,13 @@
 h1 = t(:'.title')
 
-- now = Time.current
+- now = @now
+p.reminders-sort.small
+  = t(:'.sort')
+  - { 'name' => reminders_path, 'board' => reminders_path(sort: 'board') }.each do |sort, path|
+    - if sort == @sort
+      strong.ml-2 = t(".sort_by_#{sort}")
+    - else
+      = link_to t(".sort_by_#{sort}"), path, class: 'ml-2'
 table.table
   thead
     tr

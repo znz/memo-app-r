@@ -4,8 +4,12 @@
 class RemindersController < ApplicationController
   before_action :set_reminder, only: %i[show edit update destroy complete undo_complete]
 
+  # By name, or with sort=board the actionable ones first in the order of the new memo page (without hiding any)
   def index
+    @now = Time.current
+    @sort = (params[:sort] == "board") ? "board" : "name"
     @reminders = current_user.reminders.includes(:tags).order(:name)
+    @reminders = ReminderBoard.new(@reminders, now: @now, hide_by_tags: false).all_in_order if @sort == "board"
   end
 
   def show
