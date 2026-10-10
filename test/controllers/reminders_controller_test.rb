@@ -111,8 +111,18 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "tags on the form are the tags for reminders, a disabled one marked" do
+    get new_reminder_url
+    assert_select "input[type=checkbox][name=?][value=?]", "reminder[tag_ids][]", tags(:medicine).id, count: 0
+    assert_select "label[for=?]", "reminder_tag_ids_#{tags(:archived).id}" do
+      assert_select "span.badge.badge-secondary", "休止中"
+      assert_select "small.text-muted", "（無効）"
+    end
+    assert_select "label[for=?] small", "reminder_tag_ids_#{tags(:work).id}", count: 0
+  end
+
   test "badges of the tags on the form escape the name" do
-    tag = users(:one).tags.create!(name: "<b>x</b>", color: "danger")
+    tag = users(:one).tags.create!(name: "<b>x</b>", color: "danger", reminder_use: "enabled")
     get new_reminder_url
     assert_select "label[for=?] span.badge.badge-danger", "reminder_tag_ids_#{tag.id}", "<b>x</b>"
     assert_select "label[for=?] b", "reminder_tag_ids_#{tag.id}", count: 0

@@ -41,7 +41,7 @@ class ReminderBoard
   end
 
   private def hidden?(reminder)
-    reminder.tags.any? { !it.enabled? || @hidden_tag_ids.include?(it.id) }
+    reminder.tags.any? { it.reminder_disabled? || @hidden_tag_ids.include?(it.id) }
   end
 
   private def partitioned

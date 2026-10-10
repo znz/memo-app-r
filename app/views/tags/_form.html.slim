@@ -1,10 +1,12 @@
 = simple_form_for(@tag) do |f|
   = f.error_notification
+  = f.error_notification message: f.object.errors[:base].to_sentence if f.object.errors[:base].present?
 
   .form-inputs
     = f.input :name, autofocus: true
     = f.input :color, collection: theme_color_options, include_blank: false
-    = f.input :enabled
+    = f.input :memo_use, collection: tag_use_options(:memo), include_blank: false
+    = f.input :reminder_use, collection: tag_use_options(:reminder), include_blank: false
 
   .form-actions
     = f.button :submit, class: 'btn btn-primary'

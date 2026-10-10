@@ -5,11 +5,11 @@ class TagsController < ApplicationController
   before_action :set_tag, only: %i[edit update destroy]
 
   def index
-    @tags = current_user.tags.order(:name)
+    @tags = current_user.tags.with_counts.order(:name)
   end
 
   def new
-    @tag = current_user.tags.new
+    @tag = current_user.tags.new(memo_use: "enabled", reminder_use: "enabled")
   end
 
   def edit
@@ -44,6 +44,6 @@ class TagsController < ApplicationController
   end
 
   def tag_params
-    params.expect(tag: %i[name color enabled])
+    params.expect(tag: %i[name color memo_use reminder_use])
   end
 end

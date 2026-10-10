@@ -5,14 +5,18 @@ table.table
     tr
       th = Tag.human_attribute_name(:name)
       th = Tag.human_attribute_name(:color)
-      th = Tag.human_attribute_name(:enabled)
+      th = t(:'.memo_use')
+      th = t(:'.reminder_use')
+      th = t(:'.reminders_count')
       th
   tbody
     - @tags.each do |tag_record|
       tr id=dom_id(tag_record)
         td = theme_badge tag_record.name, tag_record.color
         td = t("theme_colors.#{tag_record.color}")
-        td = tag_record.enabled? ? t(:'.enabled') : t(:'.disabled')
+        td = t("tags.use_labels.#{tag_record.memo_use}")
+        td = t("tags.use_labels.#{tag_record.reminder_use}")
+        td = tag_record.reminders_count
         td
           => link_to t(:'.edit'), edit_tag_path(tag_record)
           = button_to t(:'.destroy'), tag_record, method: :delete, class: 'btn btn-link p-0 align-baseline', form_class: 'd-inline', form: { data: { turbo_confirm: t(:'.confirm_destroy') } }

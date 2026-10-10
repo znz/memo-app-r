@@ -8,17 +8,42 @@ ja:
         user: 'ユーザー'
         user_id: 'ユーザー'
         name: '名前'
-        enabled: '有効'
+        memo_use: 'メモでの利用'
+        reminder_use: 'リマインダーでの利用'
         color: '色'
         reminders: 'リマインダー'
         created_at: '作成日時'
         updated_at: '更新日時'
 
+    errors:
+      models:
+        tag:
+          attributes:
+            base:
+              no_use: 'メモかリマインダーのどちらかで使うようにしてください'
+            reminder_use:
+              in_use: 'は%{count}件のリマインダーに付いているので「使わない」にできません'
+
   tags:
-    index:
-      title: 'タグ一覧'
+    uses:
+      memo:
+        unused: '使わない'
+        enabled: '有効'
+        disabled: '無効（新規メモでは使わない）'
+      reminder:
+        unused: '使わない'
+        enabled: '有効'
+        disabled: '無効（リマインダーを非表示）'
+    disabled_label: '（無効）'
+    use_labels:
+      unused: '—'
       enabled: '有効'
       disabled: '無効'
+    index:
+      title: 'タグ一覧'
+      memo_use: 'メモ'
+      reminder_use: 'リマインダー'
+      reminders_count: 'リマインダー数'
       new: '新規タグ'
       edit: '編集'
       destroy: '削除'

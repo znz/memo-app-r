@@ -85,7 +85,7 @@ class ReminderBoardTest < ActiveSupport::TestCase
     end
   end
 
-  test "reminders with a disabled tag are excluded" do
+  test "reminders with a tag disabled for reminders are excluded" do
     assert_not_includes names(board.prioritized + board.active), reminders(:archived_hobby).name
   end
 

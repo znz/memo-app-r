@@ -162,6 +162,8 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[type=checkbox]:not([checked])[value=?]", tags(:work).id
       assert_select "input[type=checkbox][checked][value=?]", tags(:health).id
       assert_select "label", "健康"
+      assert_select "input[type=checkbox][value=?]", tags(:archived).id, count: 0
+      assert_select "input[type=checkbox][value=?]", tags(:medicine).id, count: 0
     end
   end
 

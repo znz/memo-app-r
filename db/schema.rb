@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_05_150131) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_10_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
@@ -68,8 +68,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_150131) do
   create_table "tags", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
     t.string "color", default: "secondary", null: false
     t.datetime "created_at", null: false
-    t.boolean "enabled", default: true, null: false
+    t.string "memo_use", default: "unused", null: false
     t.string "name", null: false
+    t.string "reminder_use", default: "unused", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
     t.index ["user_id", "name"], name: "index_tags_on_user_id_and_name", unique: true
