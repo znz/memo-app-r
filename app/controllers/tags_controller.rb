@@ -33,8 +33,11 @@ class TagsController < ApplicationController
   end
 
   def destroy
-    @tag.destroy!
-    redirect_to tags_path, notice: t(".success"), status: :see_other
+    if @tag.destroy
+      redirect_to tags_path, notice: t(".success"), status: :see_other
+    else
+      redirect_to tags_path, alert: @tag.errors.full_messages.to_sentence, status: :see_other
+    end
   end
 
   private

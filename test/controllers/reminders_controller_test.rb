@@ -79,8 +79,8 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[name=?]", "reminder[name]"
       assert_select "textarea[name=?]", "reminder[description]"
       assert_select "textarea[name=?]", "reminder[memo_template]"
-      assert_select "input[type=checkbox][name=?][value=?]", "reminder[memo_tags][]", "tag1"
-      assert_select "input[type=text][name=?]", "reminder[memo_tags][]"
+      assert_select "input[type=checkbox][name=?][value=?]", "reminder[memo_tag_ids][]", tags(:tag1).id
+      assert_select "input[type=checkbox][name=?][value=?]", "reminder[memo_tag_ids][]", tags(:old).id, count: 0
       assert_select "input[type=checkbox][name=?]", "reminder[enabled]"
       %w[starts_at due_at prioritize_at repeat_until].each do |name|
         assert_select "input[type=datetime-local][name=?]", "reminder[#{name}]"
@@ -128,10 +128,12 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_select "label[for=?] b", "reminder_tag_ids_#{tag.id}", count: 0
   end
 
-  test "memo_tags check boxes are not badges" do
-    get new_reminder_url
-    assert_select "label[for=?]", "reminder_memo_tags_tag1", "tag1"
-    assert_select "label[for=?] span.badge", "reminder_memo_tags_tag1", count: 0
+  test "memo_tags check boxes are badges" do
+    get edit_reminder_url(reminders(:lunch_medicine))
+    assert_select "input[type=checkbox][checked][name=?][value=?]", "reminder[memo_tag_ids][]", tags(:medicine).id
+    assert_select "label[for=?] span.badge.badge-info", "reminder_memo_tag_ids_#{tags(:medicine).id}", "薬"
+    assert_select "label[for=?] span.badge.badge-secondary", "reminder_memo_tag_ids_#{tags(:tag1).id}", "tag1"
+    assert_select ".reminder_memo_tags small", "完了したときの新規メモに付けるタグ"
   end
 
   test "should get new with the location of a memo" do
@@ -145,7 +147,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
   test "should create reminder with a preset" do
     assert_difference("users(:one).reminders.count") do
       post reminders_url, params: { reminder: {
-        name: "朝会", description: "10分", memo_template: "朝会メモ", memo_tags: ["", "tag1", "会議"],
+        name: "朝会", description: "10分", memo_template: "朝会メモ", memo_tag_ids: ["", tags(:tag1).id, tags(:work).id],
         enabled: "1", starts_at: "2026-01-08T09:30", due_at: "2026-01-08T09:44", prioritize_at: "2026-01-08T09:40", repeat_until: "",
         recurrence_preset: "weekdays", recurrence_json: "", latitude: "35.6817", longitude: "139.7671", radius_m: "300",
         tag_ids: ["", tags(:work).id]
@@ -160,7 +162,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_equal Time.zone.local(2026, 1, 8, 9, 44), reminder.due_at
     assert_equal Time.zone.local(2026, 1, 8, 9, 40), reminder.prioritize_at
     assert_nil reminder.repeat_until
-    assert_equal ["tag1", "会議"], reminder.memo_tags
+    assert_equal [tags(:tag1), tags(:work)], reminder.memo_tags.to_a
     assert_equal [tags(:work)], reminder.tags.to_a
     assert_equal [35.6817, 139.7671, 300], [reminder.lonlat.y, reminder.lonlat.x, reminder.radius_m]
     assert_equal ["10分", "朝会メモ", true], [reminder.description, reminder.memo_template, reminder.enabled]
@@ -192,7 +194,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
 
   test "should not create reminder with invalid attributes" do
     assert_no_difference("Reminder.count") do
-      post reminders_url, params: { reminder: { name: "", recurrence_json: "{", memo_tags: ["", "会議"] } }
+      post reminders_url, params: { reminder: { name: "", recurrence_json: "{", memo_tag_ids: ["", tags(:tag1).id] } }
     end
 
     assert_response :unprocessable_content
@@ -203,7 +205,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
       assert_select ".reminder_recurrence_json .invalid-feedback", count: 1
       assert_select ".reminder_recurrence_json .invalid-feedback", /JSONとして読み取れません/
       assert_select "textarea.is-invalid[name=?]", "reminder[recurrence_json]", text: "{"
-      assert_select "input[type=checkbox][checked][name=?][value=?]", "reminder[memo_tags][]", "会議"
+      assert_select "input[type=checkbox][checked][name=?][value=?]", "reminder[memo_tag_ids][]", tags(:tag1).id
     end
   end
 
@@ -242,6 +244,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "昼の薬"
     assert_select "dd span.badge.badge-success", "健康"
+    assert_select "dd span.badge.badge-info", "薬"
     assert_select "dd", "毎日"
     assert_select "dd", "実行可能"
     assert_select "dd", "2026/01/07 09:00 〜 2026/01/07 12:30"
@@ -311,7 +314,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
   test "should update reminder" do
     patch reminder_url(@reminder), params: { reminder: {
       name: "週報", recurrence_preset: "", recurrence_json: '{"type": "weekly", "weekdays": [5]}',
-      tag_ids: ["", tags(:health).id], latitude: "", longitude: ""
+      tag_ids: ["", tags(:health).id], memo_tag_ids: ["", tags(:tag2).id], latitude: "", longitude: ""
     } }
 
     assert_redirected_to reminder_url(@reminder)
@@ -320,6 +323,15 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "週報", @reminder.name
     assert_equal({ "type" => "weekly", "weekdays" => [5] }, @reminder.recurrence)
     assert_equal [tags(:health)], @reminder.tags.to_a
+    assert_equal [tags(:tag2)], @reminder.memo_tags.to_a
+  end
+
+  test "should not update reminder with another user's memo tag" do
+    patch reminder_url(@reminder), params: { reminder: { memo_tag_ids: [tags(:tag3_two).id] } }
+
+    assert_response :unprocessable_content
+    assert_select ".reminder_memo_tags .invalid-feedback", /他のユーザーのタグは使えません/
+    assert_empty @reminder.reload.memo_tags
   end
 
   test "should update prioritize_at" do
@@ -537,7 +549,7 @@ class RemindersControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select "form#new_memo" do
       assert_select "textarea[name=?]", "memo[content]", text: "昼の薬を飲んだ"
-      assert_select "input[type=checkbox][checked][name=?][value=?]", "memo[tags][]", "薬"
+      assert_select "input[type=checkbox][checked][name=?][value=?]", "memo[tag_ids][]", tags(:medicine).id
     end
   end
 

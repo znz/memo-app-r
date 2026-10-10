@@ -22,13 +22,21 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td span.badge", text: tags(:other_users).name, count: 0
   end
 
-  test "index shows the uses and the number of the reminders" do
+  test "index shows the uses, the numbers of the memos and the reminders and the last use by a memo" do
+    memos(:one).update!(created_at: Time.zone.local(2026, 1, 5, 10, 0))
     get tags_url
-    assert_equal ["名前", "色", "メモ", "リマインダー", "リマインダー数", ""], css_select("thead th").map(&:text)
+    assert_equal ["名前", "色", "メモ", "リマインダー", "メモ数", "メモの最終使用日", "リマインダー数", ""], css_select("thead th").map(&:text)
     assert_select "tr[id=?]", dom_id(tags(:work)) do
       assert_select "td:nth-child(3)", "有効"
       assert_select "td:nth-child(4)", "有効"
+      assert_select "td:nth-child(5)", "0"
+      assert_select "td:nth-child(6)", ""
+      assert_select "td:nth-child(7)", "1"
+    end
+    assert_select "tr[id=?]", dom_id(tags(:tag1)) do
       assert_select "td:nth-child(5)", "1"
+      assert_select "td:nth-child(6)", "2026/01/05"
+      assert_select "td:nth-child(7)", "0"
     end
     assert_select "tr[id=?]", dom_id(tags(:archived)) do
       assert_select "td:nth-child(3)", "—"
@@ -37,8 +45,31 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr[id=?]", dom_id(tags(:medicine)) do
       assert_select "td:nth-child(3)", "有効"
       assert_select "td:nth-child(4)", "—"
-      assert_select "td:nth-child(5)", "0"
+      assert_select "td:nth-child(7)", "0"
     end
+  end
+
+  test "index has no destroy button for a tag on memos" do
+    get tags_url
+    assert_select "form[action=?] input[name=_method][value=delete]", tag_path(tags(:tag1)), count: 0
+    assert_select "form[action=?] input[name=_method][value=delete]", tag_path(tags(:medicine))
+  end
+
+  test "should not destroy a tag on memos" do
+    assert_no_difference("Tag.count") do
+      delete tag_url(tags(:tag1))
+    end
+
+    assert_redirected_to tags_url
+    assert_equal "メモが存在しているので削除できません", flash[:alert]
+  end
+
+  test "should not update the memo use to unused while memos have the tag" do
+    patch tag_url(tags(:tag1)), params: { tag: { memo_use: "unused", reminder_use: "enabled" } }
+
+    assert_response :unprocessable_content
+    assert_select ".tag_memo_use .invalid-feedback", /1件のメモかリマインダーに付いているので「使わない」にできません/
+    assert tags(:tag1).reload.memo_enabled?
   end
 
   test "should get new" do

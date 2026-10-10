@@ -25,9 +25,8 @@ table.table
       tr
         td = l(memo.created_at)
         td
-          ul.list-unstyled
-            - memo.tags&.each do |tag|
-              li = tag
+          - memo.tags.each do |tag_record|
+            =< theme_badge tag_record.name, tag_record.color
         td
           div.arib-font.memo-scroll
             = format_content(memo.content, :auto)

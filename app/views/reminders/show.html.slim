@@ -13,9 +13,8 @@ dl.row
   dd.col-sm-9.arib-font = format_content(@reminder.memo_template, :auto)
   dt.col-sm-3 = Reminder.human_attribute_name(:memo_tags)
   dd.col-sm-9
-    ul.list-unstyled
-      - @reminder.memo_tags.each do |memo_tag|
-        li = memo_tag
+    - @reminder.memo_tags.each do |tag_record|
+      =< theme_badge tag_record.name, tag_record.color
   dt.col-sm-3 = Reminder.human_attribute_name(:enabled)
   dd.col-sm-9 = @reminder.enabled? ? t(:'.enabled') : t(:'.disabled')
   dt.col-sm-3 = t(:'.state')

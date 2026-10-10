@@ -7,6 +7,8 @@ table.table
       th = Tag.human_attribute_name(:color)
       th = t(:'.memo_use')
       th = t(:'.reminder_use')
+      th = t(:'.memos_count')
+      th = t(:'.last_memo_at')
       th = t(:'.reminders_count')
       th
   tbody
@@ -16,9 +18,12 @@ table.table
         td = t("theme_colors.#{tag_record.color}")
         td = t("tags.use_labels.#{tag_record.memo_use}")
         td = t("tags.use_labels.#{tag_record.reminder_use}")
+        td = tag_record.memos_count
+        td = tag_record.last_memo_at && l(tag_record.last_memo_at.to_date)
         td = tag_record.reminders_count
         td
           => link_to t(:'.edit'), edit_tag_path(tag_record)
-          = button_to t(:'.destroy'), tag_record, method: :delete, class: 'btn btn-link p-0 align-baseline', form_class: 'd-inline', form: { data: { turbo_confirm: t(:'.confirm_destroy') } }
+          - if tag_record.memos_count.zero?
+            = button_to t(:'.destroy'), tag_record, method: :delete, class: 'btn btn-link p-0 align-baseline', form_class: 'd-inline', form: { data: { turbo_confirm: t(:'.confirm_destroy') } }
 
 = link_to t(:'.new'), new_tag_path, accesskey: 'N'

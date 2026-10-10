@@ -5,7 +5,6 @@ lunch_medicine:
   name: 昼の薬
   description: 食後に飲む
   memo_template: 昼の薬を飲んだ
-  memo_tags: [薬]
   recurrence: { type: daily }
   starts_at: 2026-01-01 09:00:00 +09:00
   due_at: 2026-01-01 12:30:00 +09:00

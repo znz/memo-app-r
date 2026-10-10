@@ -78,9 +78,6 @@ GEM
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
       uri (>= 0.13.1)
-    acts-as-taggable-array-on (0.7.0)
-      activerecord (>= 5.2)
-      activesupport (>= 5.2)
     addressable (2.9.0)
       public_suffix (>= 2.0.2, < 8.0)
     ast (2.4.3)
@@ -417,7 +414,6 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord-postgis-adapter
-  acts-as-taggable-array-on
   bootsnap
   brakeman
   capybara
@@ -464,7 +460,6 @@ CHECKSUMS
   activerecord-postgis-adapter (11.1.1) sha256=ae2b9bd88c9ed7bfd21583bf233345cd0f1cd58d3ef96d78d001470f944fbac2
   activestorage (8.1.4) sha256=f4956f3ec9ee63e5e0b332b57c877cb627f82b56f4cc902279310d2aa285c7a8
   activesupport (8.1.4) sha256=891dd3fe43c4fc8391934b237b1189bb1f661c932a84a840043db9d46a4e80df
-  acts-as-taggable-array-on (0.7.0) sha256=cc24a4434a739322998b6b9f8ac8a54abfd9ff0f0ec2690260cf16bc6f67206a
   addressable (2.9.0) sha256=7fdf6ac3660f7f4e867a0838be3f6cf722ace541dd97767fa42bc6cfa980c7af
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b

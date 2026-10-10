@@ -12,6 +12,7 @@ ja:
         reminder_use: 'リマインダーでの利用'
         color: '色'
         reminders: 'リマインダー'
+        memo_tags: 'メモ'
         created_at: '作成日時'
         updated_at: '更新日時'
 
@@ -21,6 +22,8 @@ ja:
           attributes:
             base:
               no_use: 'メモかリマインダーのどちらかで使うようにしてください'
+            memo_use:
+              in_use: 'は%{count}件のメモかリマインダーに付いているので「使わない」にできません'
             reminder_use:
               in_use: 'は%{count}件のリマインダーに付いているので「使わない」にできません'
 
@@ -43,6 +46,8 @@ ja:
       title: 'タグ一覧'
       memo_use: 'メモ'
       reminder_use: 'リマインダー'
+      memos_count: 'メモ数'
+      last_memo_at: 'メモの最終使用日'
       reminders_count: 'リマインダー数'
       new: '新規タグ'
       edit: '編集'

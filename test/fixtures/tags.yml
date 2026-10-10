@@ -27,3 +27,28 @@ other_users:
   name: 他人のタグ
   color: danger
   reminder_use: enabled
+
+old:
+  user: one
+  name: 旧メモ
+  memo_use: disabled
+
+tag1:
+  user: one
+  name: tag1
+  memo_use: enabled
+
+tag2:
+  user: one
+  name: tag2
+  memo_use: enabled
+
+tag2_two:
+  user: two
+  name: tag2
+  memo_use: enabled
+
+tag3_two:
+  user: two
+  name: tag3
+  memo_use: enabled

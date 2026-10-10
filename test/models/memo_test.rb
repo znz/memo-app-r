@@ -32,8 +32,35 @@ class MemoTest < ActiveSupport::TestCase
     assert_not memo.nearby_reminders_visible?(now)
   end
 
-  test "all_tags_for lists only the tags of the memos of the user" do
-    assert_equal %w[tag1 tag2], Memo.all_tags_for(users(:one)).sort
-    assert_equal %w[tag2 tag3], Memo.all_tags_for(users(:two)).sort
+  test "tags through memo_tags by name" do
+    assert_equal [tags(:tag1), tags(:tag2), tags(:old)], memos(:one).tags.to_a
+  end
+
+  test "destroying a memo removes its memo_tags" do
+    assert_difference("MemoTag.count", -3) do
+      memos(:one).destroy!
+    end
+  end
+
+  test "memo_tags reject duplicates" do
+    memo_tag = MemoTag.new(memo: memos(:one), tag: tags(:tag1))
+    assert_not memo_tag.valid?
+    assert memo_tag.errors.of_kind?(:tag_id, :taken)
+  end
+
+  test "tags must belong to the same user" do
+    memo = Memo.new(user: @user, create_from: "::1", tag_ids: [tags(:tag1).id, tags(:tag3_two).id])
+    assert_not memo.valid?
+    assert memo.errors.of_kind?(:tag_ids, :not_owned)
+    assert_equal ["タグに他のユーザーのタグは使えません"], memo.errors.full_messages
+    memo.tag_ids = [tags(:tag1).id]
+    assert memo.valid?
+  end
+
+  test "tags_contains has the memos with all the given tags" do
+    other = Memo.create!(user: @user, create_from: "::1", tag_ids: [tags(:tag1).id])
+    assert_equal [memos(:one), other].sort_by(&:id), Memo.tags_contains(tags(:tag1).id).sort_by(&:id)
+    assert_equal [memos(:one)], Memo.tags_contains(tags(:tag1).id, tags(:tag2).id).to_a
+    assert_equal Memo.count, Memo.tags_contains("").count
   end
 end

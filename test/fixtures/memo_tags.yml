@@ -1,0 +1,19 @@
+one_tag1:
+  memo: one
+  tag: tag1
+
+one_tag2:
+  memo: one
+  tag: tag2
+
+one_old:
+  memo: one
+  tag: old
+
+two_tag2:
+  memo: two
+  tag: tag2_two
+
+two_tag3:
+  memo: two
+  tag: tag3_two

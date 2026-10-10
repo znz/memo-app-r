@@ -11,13 +11,13 @@ class Reminder < ApplicationRecord
   belongs_to :user
   has_many :reminder_tags, dependent: :destroy
   has_many :tags, -> { order(:name) }, through: :reminder_tags
+  has_many :reminder_memo_tags, dependent: :destroy
+  has_many :memo_tags, -> { order(:name) }, through: :reminder_memo_tags, source: :tag
 
   attribute :recurrence_preset, :string
   attribute :recurrence_json, :string
   attribute :latitude, :float
   attribute :longitude, :float
-
-  normalizes :memo_tags, with: ->(tags) { Array(tags).compact_blank.uniq }, apply_to_nil: true
 
   before_validation :assign_recurrence_input
   before_validation :assign_lonlat
@@ -36,6 +36,7 @@ class Reminder < ApplicationRecord
   validate :overdue_must_have_end
   validate :prioritize_at_must_be_in_first_window
   validate :tags_must_be_owned
+  validate :memo_tags_must_be_owned
 
   scope :enabled, -> { where(enabled: true) }
 
@@ -114,7 +115,7 @@ class Reminder < ApplicationRecord
 
   # Attributes of the new memo made after the completion
   def memo_attributes
-    { content: memo_template.presence || name, tags: memo_tags }
+    { content: memo_template.presence || name, tag_ids: memo_tag_ids }
   end
 
   # completed_at: last_completed_at.iso8601(6) of the completion to undo, so that a stale button does not undo
@@ -330,5 +331,9 @@ class Reminder < ApplicationRecord
 
   private def tags_must_be_owned
     errors.add(:tag_ids, :not_owned) if tags.any? { it.user_id != user_id }
+  end
+
+  private def memo_tags_must_be_owned
+    errors.add(:memo_tag_ids, :not_owned) if memo_tags.any? { it.user_id != user_id }
   end
 end

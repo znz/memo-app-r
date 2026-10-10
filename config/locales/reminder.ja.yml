@@ -12,6 +12,7 @@ ja:
         description: '説明'
         memo_template: 'メモ本文のテンプレート'
         memo_tags: 'メモに付けるタグ'
+        memo_tag_ids: 'メモに付けるタグ'
         enabled: '有効'
         starts_at: '通知開始日時'
         due_at: '実行可能期限'
@@ -53,6 +54,8 @@ ja:
             recurrence_json:
               invalid_json: 'がJSONとして読み取れません'
             tag_ids:
+              not_owned: 'に他のユーザーのタグは使えません'
+            memo_tag_ids:
               not_owned: 'に他のユーザーのタグは使えません'
             recurrence:
               not_a_hash: 'はJSONのオブジェクトで指定してください'
@@ -171,7 +174,6 @@ ja:
       button: '取り消す'
       completion_button: '完了を取り消す'
     form:
-      new_memo_tag: 'メモに付ける新規タグ'
       recurrence_unchanged: '（変更しない）'
     states:
       waiting: '開始前'

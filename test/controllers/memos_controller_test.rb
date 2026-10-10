@@ -37,9 +37,39 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "form#new_memo" do
       assert_select "textarea[name=?]", "memo[content]", text: "昼の薬を飲んだ"
-      assert_select "input[type=checkbox][checked][name=?][value=?]", "memo[tags][]", "薬"
-      assert_select "input[type=checkbox]:not([checked])[name=?][value=?]", "memo[tags][]", "tag1"
+      assert_select "input[type=checkbox][checked][name=?][value=?]", "memo[tag_ids][]", tags(:medicine).id
+      assert_select "input[type=checkbox]:not([checked])[name=?][value=?]", "memo[tag_ids][]", tags(:tag1).id
     end
+  end
+
+  test "new offers the tags enabled for memos as badges, a link to a new tag and no text field" do
+    get new_memo_url
+    assert_select "form#new_memo" do
+      assert_select "label[for=?] span.badge.badge-info", "memo_tag_ids_#{tags(:medicine).id}", "薬"
+      assert_select "label[for=?] span.badge.badge-primary", "memo_tag_ids_#{tags(:work).id}", "仕事"
+      assert_select "input[type=checkbox][value=?]", tags(:old).id, count: 0
+      assert_select "input[type=checkbox][value=?]", tags(:health).id, count: 0
+      assert_select "input[type=checkbox][value=?]", tags(:tag3_two).id, count: 0
+      assert_select "a[href=?]", new_tag_path, "新規タグ"
+      assert_select "input[type=text]", count: 0
+    end
+  end
+
+  test "new prefilled from a reminder offers its tag disabled for memos" do
+    reminders(:lunch_medicine).update!(memo_tag_ids: [tags(:old).id])
+    get new_memo_url(reminder_id: reminders(:lunch_medicine).to_param)
+    assert_select "input[type=checkbox][checked][name=?][value=?]", "memo[tag_ids][]", tags(:old).id
+    assert_select "label[for=?] small.text-muted", "memo_tag_ids_#{tags(:old).id}", "（無効）"
+  end
+
+  test "edit offers the tags disabled for memos too, marked and after the enabled ones" do
+    get edit_memo_url(@memo)
+    assert_select "input[type=checkbox][checked][name=?][value=?]", "memo[tag_ids][]", tags(:old).id
+    assert_select "input[type=checkbox][checked][name=?][value=?]", "memo[tag_ids][]", tags(:tag1).id
+    assert_select "input[type=checkbox]:not([checked])[name=?][value=?]", "memo[tag_ids][]", tags(:medicine).id
+    assert_select "label[for=?] small.text-muted", "memo_tag_ids_#{tags(:old).id}", "（無効）"
+    assert_select "label[for=?] small", "memo_tag_ids_#{tags(:tag1).id}", count: 0
+    assert_equal tags(:old).id, css_select("input[name='memo[tag_ids][]'][type=checkbox]").last["value"]
   end
 
   test "should get new without prefill from another user's or an unknown reminder" do
@@ -47,7 +77,7 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
       get new_memo_url(reminder_id:)
       assert_response :success
       assert_select "textarea[name=?]", "memo[content]", text: ""
-      assert_select "input[type=checkbox][checked][name=?]", "memo[tags][]", count: 0
+      assert_select "input[type=checkbox][checked][name=?]", "memo[tag_ids][]", count: 0
     end
   end
 
@@ -57,7 +87,7 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
       get new_memo_url, params: { reminder_id: [reminder_id] }
       assert_response :success
       assert_select "textarea[name=?]", "memo[content]", text: ""
-      assert_select "input[type=checkbox][checked][name=?]", "memo[tags][]", count: 0
+      assert_select "input[type=checkbox][checked][name=?]", "memo[tag_ids][]", count: 0
     end
   end
 
@@ -141,6 +171,7 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
   test "new has no reminder sections without actionable reminders" do
     travel_to_base_time
     users(:one).reminders.destroy_all
+    users(:one).memos.destroy_all
     users(:one).tags.destroy_all
     get new_memo_url
 
@@ -169,10 +200,21 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
 
   test "should create memo" do
     assert_difference("Memo.count") do
-      post memos_url, params: { memo: { content: @memo.content, create_from: @memo.create_from, info: @memo.info, price: @memo.price, tags: @memo.tags, user_id: @memo.user_id } }
+      post memos_url, params: { memo: { content: @memo.content, create_from: @memo.create_from, info: @memo.info, price: @memo.price, tag_ids: ["", tags(:tag1).id, tags(:medicine).id], user_id: @memo.user_id } }
     end
 
-    assert_redirected_to memo_url(Memo.order(:created_at).last)
+    memo = Memo.order(:created_at).last
+    assert_redirected_to memo_url(memo)
+    assert_equal [tags(:tag1), tags(:medicine)], memo.tags.to_a
+  end
+
+  test "should not create memo with another user's tag" do
+    assert_no_difference("Memo.count") do
+      post memos_url, params: { memo: { content: "盗み見", tag_ids: [tags(:tag3_two).id] } }
+    end
+
+    assert_response :unprocessable_content
+    assert_select ".memo_tags .invalid-feedback", /他のユーザーのタグは使えません/
   end
 
   test "should render new with reminders and 422 when the memo is not saved" do
@@ -252,20 +294,39 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
   test "index lists only the memos of the current user" do
     get memos_url
     assert_response :success
-    assert_select "td li", text: "tag1"
-    assert_select "td li", text: "tag3", count: 0
+    assert_select "td span.badge.badge-secondary", text: "tag1"
+    assert_select "td span.badge", text: "tag3", count: 0
   end
 
-  test "search form offers only the tags of the memos of the current user" do
+  test "search form offers the tags for memos of the current user, a disabled one marked" do
     get memos_url
-    assert_select "input[name='q[tags_contains][]'][value=tag1]"
-    assert_select "input[name='q[tags_contains][]'][value=tag3]", count: 0
+    assert_select "input[name='q[tags_contains][]'][value=?]", tags(:tag1).id
+    assert_select "input[name='q[tags_contains][]'][value=?]", tags(:old).id
+    assert_select "label[for=?] small.text-muted", "q_tags_contains_#{tags(:old).id}", "（無効）"
+    assert_select "input[name='q[tags_contains][]'][value=?]", tags(:health).id, count: 0
+    assert_select "input[name='q[tags_contains][]'][value=?]", tags(:tag3_two).id, count: 0
   end
 
-  test "new form offers only the tags of the memos of the current user" do
-    get new_memo_url
-    assert_select "input[name='memo[tags][]'][value=tag1]"
-    assert_select "input[name='memo[tags][]'][value=tag3]", count: 0
+  test "search by tags finds the memos with all of them" do
+    other = users(:one).memos.create!(content: "tag1だけ", create_from: "::1", tag_ids: [tags(:tag1).id])
+    get memos_url(q: { tags_contains: [tags(:tag1).id] })
+    assert_select "td", text: /tag1だけ/
+    assert_select "td span.badge", text: "tag2"
+
+    get memos_url(q: { tags_contains: [tags(:tag1).id, tags(:tag2).id] })
+    assert_select "td", text: /#{other.content}/, count: 0
+    assert_select "td span.badge", text: "tag2"
+  end
+
+  test "index json has the names of the tags" do
+    get memos_url(format: :json)
+    assert_equal [%w[tag1 tag2 旧メモ]], response.parsed_body.pluck("tags")
+  end
+
+  test "show has the tags as badges" do
+    get memo_url(@memo)
+    assert_select "dd span.badge.badge-secondary", "tag1"
+    assert_select "dd span.badge", "旧メモ"
   end
 
   test "should not show another user's memo" do
@@ -317,8 +378,9 @@ class MemosControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update memo" do
-    patch memo_url(@memo), params: { memo: { content: @memo.content, price: @memo.price, tags: @memo.tags } }
+    patch memo_url(@memo), params: { memo: { content: @memo.content, price: @memo.price, tag_ids: ["", tags(:tag2).id, tags(:medicine).id] } }
     assert_redirected_to memo_url(@memo)
+    assert_equal [tags(:tag2), tags(:medicine)], @memo.reload.tags.to_a
   end
 
   test "should destroy memo" do

@@ -7,12 +7,9 @@
     = f.input :content, autofocus: true, input_html: { class: 'arib-font' }
     = f.input :price
     = f.button :submit, class: 'btn btn-primary'
-    = f.input :tags, as: :check_boxes, collection: memo_tag_candidates(@memo.tags), wrapper: :vertical_collection_inline
+    = f.association :tags, as: :check_boxes, collection: memo_tag_candidates(@memo.tags, include_disabled: @memo.persisted?), label_method: ->(tag_record) { memo_tag_label(tag_record) }, wrapper: :vertical_collection_inline
+    p.small = link_to t(:'.new_tag'), new_tag_path
     = f.hidden_field :lonlat
-    .form-group.string.optional
-      label.form-control-label.string.optional
-        = t(:'.new_tag')
-      = text_field_tag 'memo[tags][]', nil, class: 'form-control string optional'
 
   .form-actions
     = f.button :submit, class: 'btn btn-primary'

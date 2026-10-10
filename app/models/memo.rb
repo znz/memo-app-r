@@ -6,39 +6,28 @@ class Memo < ApplicationRecord
 
   NEARBY_REMINDERS_WITHIN = 30.minutes
 
-  acts_as_taggable_array_on :tags
   belongs_to :user
+  has_many :memo_tags, dependent: :destroy
+  has_many :tags, -> { order(:name) }, through: :memo_tags
 
-  # Distinct tags of the memos of the user (all_tags ignores the current scope)
-  def self.all_tags_for(user)
-    user_id = user.id
-    all_tags { where(user_id: user_id) }
-  end
+  validate :tags_must_be_owned
 
   # Nearby reminders are shown on a memo with location just after its creation
   def nearby_reminders_visible?(now = Time.current)
     lonlat.present? && created_at.present? && created_at >= now - NEARBY_REMINDERS_WITHIN
   end
 
-  private def validate_tags
-    if !tags.is_a?(Array) || tags.any?(&:blank?)
-      errors.add(:tags, :invalid)
-    end
+  private def tags_must_be_owned
+    errors.add(:tag_ids, :not_owned) if tags.any? { it.user_id != user_id }
   end
 
-  private def unique_tags
-    if tags.is_a?(Array)
-      self.tags = tags.uniq.sort.compact_blank
-    end
-  end
-  before_validation :unique_tags
-
-  scope :tags_contains, ->(*values) {
-    where("tags @> ARRAY[?]::varchar[]", values&.map(&:to_s))
+  # Memos with all the given tags (ids)
+  scope :tags_contains, lambda { |*ids|
+    ids.compact_blank.inject(all) { |memos, id| memos.where(id: MemoTag.where(tag_id: id).select(:memo_id)) }
   }
 
   def self.ransackable_attributes(_auth_object = nil)
-    ["content", "create_from", "created_at", "created_on", "hostname", "id", "info", "lonlat", "price", "tags", "updated_at", "user_agent"]
+    ["content", "create_from", "created_at", "created_on", "hostname", "id", "info", "lonlat", "price", "updated_at", "user_agent"]
   end
 
   # Memos are always searched within current_user.memos, so the user is not searchable

@@ -23,7 +23,7 @@ class ReminderTest < ActiveSupport::TestCase
     reminder = Reminder.new
     assert reminder.enabled?
     assert_equal({ "type" => "none" }, reminder.recurrence)
-    assert_equal [], reminder.memo_tags
+    assert_empty reminder.memo_tags
     assert_equal 200, reminder.radius_m
     assert_equal 0, reminder.completed_count
     assert_nil reminder.last_completed_at
@@ -165,10 +165,19 @@ class ReminderTest < ActiveSupport::TestCase
     end
   end
 
-  test "memo_tags are normalized" do
-    reminder = new_reminder(memo_tags: ["薬", "", nil, "薬", "記録"])
-    assert_equal %w[薬 記録], reminder.memo_tags
-    assert_equal [], new_reminder(memo_tags: nil).memo_tags
+  test "memo_tags through reminder_memo_tags by name" do
+    reminder = reminders(:lunch_medicine)
+    assert_equal [tags(:medicine)], reminder.memo_tags.to_a
+    reminder.update!(memo_tag_ids: [tags(:tag2).id, tags(:tag1).id])
+    assert_equal [tags(:tag1), tags(:tag2)], reminder.reload.memo_tags.to_a
+    assert_difference("ReminderMemoTag.count", -2) { reminder.destroy! }
+  end
+
+  test "memo_tags must belong to the same user" do
+    reminder = new_reminder(memo_tag_ids: [tags(:tag1).id, tags(:tag3_two).id])
+    assert_not reminder.valid?
+    assert reminder.errors.of_kind?(:memo_tag_ids, :not_owned)
+    assert new_reminder(memo_tag_ids: [tags(:tag1).id]).valid?
   end
 
   test "tags must belong to the same user" do
@@ -618,8 +627,8 @@ class ReminderTest < ActiveSupport::TestCase
   end
 
   test "memo_attributes prefill a new memo" do
-    assert_equal({ content: "昼の薬を飲んだ", tags: ["薬"] }, reminders(:lunch_medicine).memo_attributes)
-    assert_equal({ content: "日報", tags: [] }, reminders(:work_report).memo_attributes)
+    assert_equal({ content: "昼の薬を飲んだ", tag_ids: [tags(:medicine).id] }, reminders(:lunch_medicine).memo_attributes)
+    assert_equal({ content: "日報", tag_ids: [] }, reminders(:work_report).memo_attributes)
   end
 
   test "complete! keeps the state before the completion" do

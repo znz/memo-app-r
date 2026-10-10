@@ -77,6 +77,37 @@ class TagTest < ActiveSupport::TestCase
     assert tag.update(reminder_use: "unused")
   end
 
+  test "memo_use cannot become unused while memos have the tag" do
+    tag = tags(:tag1)
+    tag.reminder_use = "enabled"
+    assert_not tag.update(memo_use: "unused")
+    assert tag.errors.of_kind?(:memo_use, :in_use)
+    assert_equal ["メモでの利用は1件のメモかリマインダーに付いているので「使わない」にできません"], tag.errors.full_messages
+  end
+
+  test "memo_use cannot become unused while reminders add the tag to memos" do
+    tag = tags(:medicine)
+    tag.reminder_use = "enabled"
+    assert_not tag.update(memo_use: "unused")
+    assert_equal ["メモでの利用は1件のメモかリマインダーに付いているので「使わない」にできません"], tag.errors.full_messages
+
+    tag.reminder_memo_tags.destroy_all
+    assert tag.update(memo_use: "unused")
+  end
+
+  test "a tag on memos cannot be destroyed" do
+    tag = tags(:tag1)
+    assert_not tag.destroy
+    assert_equal ["メモが存在しているので削除できません"], tag.errors.full_messages
+    assert Tag.exists?(tag.id)
+  end
+
+  test "destroying a tag removes it from the memo tags of reminders" do
+    assert_difference("ReminderMemoTag.count", -1) do
+      tags(:medicine).destroy!
+    end
+  end
+
   test "name is stripped" do
     assert_equal "新規", Tag.new(name: " 新規\t").name
   end
@@ -89,11 +120,15 @@ class TagTest < ActiveSupport::TestCase
     assert_includes Tag.memo_enabled, tags(:medicine)
   end
 
-  test "with_counts has the number of the reminders" do
-    tags = users(:one).tags.with_counts.order(:name).index_by(&:name)
-    assert_equal 1, tags[tags(:work).name].reminders_count
-    assert_equal 0, tags[tags(:medicine).name].reminders_count
-    assert_equal users(:one).tags.count, tags.size
+  test "with_counts has the numbers of the reminders and the memos and the time of the last memo" do
+    memos(:one).update!(created_at: Time.zone.local(2026, 1, 5, 10, 0))
+    Memo.create!(user: users(:one), create_from: "::1", tag_ids: [tags(:tag1).id], created_at: Time.zone.local(2026, 1, 6, 9, 0))
+    relation = users(:one).tags.with_counts.order(:name)
+    assert_equal users(:one).tags.count, relation.count(:all)
+    tags = relation.index_by(&:name)
+    assert_equal [1, 0, nil], tags[tags(:work).name].then { [it.reminders_count, it.memos_count, it.last_memo_at] }
+    assert_equal [0, 2, Time.zone.local(2026, 1, 6, 9, 0)], tags[tags(:tag1).name].then { [it.reminders_count, it.memos_count, it.last_memo_at] }
+    assert_equal [0, 1, Time.zone.local(2026, 1, 5, 10, 0)], tags[tags(:tag2).name].then { [it.reminders_count, it.memos_count, it.last_memo_at] }
   end
 
   test "user has many tags" do

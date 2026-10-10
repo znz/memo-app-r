@@ -68,11 +68,6 @@ class RemindersHelperTest < ActionView::TestCase
     assert(options.none? { it.first.include?("translation missing") })
   end
 
-  test "memo_tag_candidates adds the given tags to the tags of the memos of the current user" do
-    assert_equal %w[tag1 tag2 新規], memo_tag_candidates(["新規", "tag1", ""])
-    assert_equal %w[tag1 tag2], memo_tag_candidates(nil)
-  end
-
   test "reminder_state_label" do
     now = Time.zone.local(2026, 1, 7, 12, 0)
     assert_equal "期限切れ", reminder_state_label(reminders(:tax_papers), now)

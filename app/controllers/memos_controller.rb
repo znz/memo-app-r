@@ -15,7 +15,7 @@ class MemosController < ApplicationController
     @q.sorts = "created_at desc" if @q.sorts.empty?
     @memos = @q.result
     @memos_without_pagination = @memos
-    @memos = @memos.page(params[:page])
+    @memos = @memos.page(params[:page]).includes(:tags)
   end
 
   # GET /memos/1
@@ -105,6 +105,6 @@ class MemosController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def memo_params
-    params.expect(memo: [:info, :content, :price, :lonlat, tags: []])
+    params.expect(memo: [:info, :content, :price, :lonlat, tag_ids: []])
   end
 end

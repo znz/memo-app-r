@@ -72,7 +72,7 @@ class RemindersController < ApplicationController
   def reminder_params
     params.expect(reminder: [
       :name, :description, :memo_template, :enabled, :starts_at, :due_at, :prioritize_at, :repeat_until,
-      :recurrence_preset, :recurrence_json, :last_completed_at, :latitude, :longitude, :radius_m, memo_tags: [], tag_ids: []
+      :recurrence_preset, :recurrence_json, :last_completed_at, :latitude, :longitude, :radius_m, memo_tag_ids: [], tag_ids: []
     ])
   end
 

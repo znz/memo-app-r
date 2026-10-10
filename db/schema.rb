@@ -10,10 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_10_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_10_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
+
+  create_table "memo_tags", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "memo_id", null: false
+    t.uuid "tag_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["memo_id", "tag_id"], name: "index_memo_tags_on_memo_id_and_tag_id", unique: true
+    t.index ["tag_id"], name: "index_memo_tags_on_tag_id"
+  end
 
   create_table "memos", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
     t.text "content"
@@ -23,14 +32,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000000) do
     t.string "info"
     t.geography "lonlat", limit: {srid: 4326, type: "st_point", geographic: true}
     t.integer "price"
-    t.string "tags", array: true
     t.datetime "updated_at", precision: nil, null: false
     t.string "user_agent"
     t.uuid "user_id", null: false
     t.index ["created_at"], name: "index_memos_on_created_at"
     t.index ["lonlat"], name: "index_memos_on_lonlat", using: :gist
-    t.index ["tags"], name: "index_memos_on_tags", using: :gin
     t.index ["user_id"], name: "index_memos_on_user_id"
+  end
+
+  create_table "reminder_memo_tags", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "reminder_id", null: false
+    t.uuid "tag_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["reminder_id", "tag_id"], name: "index_reminder_memo_tags_on_reminder_id_and_tag_id", unique: true
+    t.index ["tag_id"], name: "index_reminder_memo_tags_on_tag_id"
   end
 
   create_table "reminder_tags", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
@@ -50,7 +66,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000000) do
     t.boolean "enabled", default: true, null: false
     t.datetime "last_completed_at"
     t.geography "lonlat", limit: {srid: 4326, type: "st_point", geographic: true}
-    t.string "memo_tags", default: [], null: false, array: true
     t.text "memo_template"
     t.string "name", null: false
     t.jsonb "previous_completion"
@@ -103,6 +118,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000000) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
+  add_foreign_key "memo_tags", "memos", on_delete: :cascade
+  add_foreign_key "memo_tags", "tags"
+  add_foreign_key "reminder_memo_tags", "reminders", on_delete: :cascade
+  add_foreign_key "reminder_memo_tags", "tags", on_delete: :cascade
   add_foreign_key "reminder_tags", "reminders", on_delete: :cascade
   add_foreign_key "reminder_tags", "tags", on_delete: :cascade
   add_foreign_key "reminders", "users"

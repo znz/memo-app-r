@@ -18,9 +18,8 @@ dl.row
   dd.col-sm-9 = @memo.price&.to_fs(:delimited)
   dt.col-sm-3 = Memo.human_attribute_name(:tags)
   dd.col-sm-9
-    ul.list-unstyled
-      - @memo.tags&.each do |tag|
-        li = tag
+    - @memo.tags.each do |tag_record|
+      =< theme_badge tag_record.name, tag_record.color
   dt.col-sm-3 = Memo.human_attribute_name(:user_id)
   dd.col-sm-9 = @memo.user&.email
   dt.col-sm-3 = Memo.human_attribute_name(:create_from)
