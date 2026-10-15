@@ -16,9 +16,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000001) do
   enable_extension "postgis"
 
   create_table "memo_tags", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
-    t.datetime "created_at", null: false
     t.uuid "memo_id", null: false
     t.uuid "tag_id", null: false
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["memo_id", "tag_id"], name: "index_memo_tags_on_memo_id_and_tag_id", unique: true
     t.index ["tag_id"], name: "index_memo_tags_on_tag_id"
@@ -41,9 +41,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000001) do
   end
 
   create_table "reminder_memo_tags", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
-    t.datetime "created_at", null: false
     t.uuid "reminder_id", null: false
     t.uuid "tag_id", null: false
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["reminder_id", "tag_id"], name: "index_reminder_memo_tags_on_reminder_id_and_tag_id", unique: true
     t.index ["tag_id"], name: "index_reminder_memo_tags_on_tag_id"
@@ -68,7 +68,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000001) do
     t.geography "lonlat", limit: {srid: 4326, type: "st_point", geographic: true}
     t.text "memo_template"
     t.string "name", null: false
-    t.jsonb "previous_completion"
     t.datetime "prioritize_at"
     t.integer "radius_m", default: 200, null: false
     t.jsonb "recurrence", default: {"type" => "none"}, null: false
@@ -76,6 +75,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000001) do
     t.datetime "starts_at"
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
+    t.jsonb "previous_completion"
     t.index ["lonlat"], name: "index_reminders_on_lonlat", using: :gist
     t.index ["user_id"], name: "index_reminders_on_user_id"
   end
@@ -83,11 +83,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000001) do
   create_table "tags", id: :uuid, default: -> { "uuidv7()" }, force: :cascade do |t|
     t.string "color", default: "secondary", null: false
     t.datetime "created_at", null: false
-    t.string "memo_use", default: "unused", null: false
     t.string "name", null: false
-    t.string "reminder_use", default: "unused", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
+    t.string "memo_use", default: "unused", null: false
+    t.string "reminder_use", default: "unused", null: false
     t.index ["user_id", "name"], name: "index_tags_on_user_id_and_name", unique: true
     t.index ["user_id"], name: "index_tags_on_user_id"
   end
