@@ -9,19 +9,6 @@
   max-height: 5em;
 }
 
-.memo_tags .form-check-inline:nth-child(3n) label,
-.q_tags_contains .form-check-inline:nth-child(3n) label {
-  background-color: #dff;
-}
-.memo_tags .form-check-inline:nth-child(3n+1) label,
-.q_tags_contains .form-check-inline:nth-child(3n+1) label {
-  background-color: #fdf;
-}
-.memo_tags .form-check-inline:nth-child(3n+2) label,
-.q_tags_contains .form-check-inline:nth-child(3n+2) label {
-  background-color: #ffd;
-}
-
 .reminder-json {
   line-height: normal;
 }
