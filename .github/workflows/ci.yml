@@ -30,4 +30,5 @@ jobs:
         bundler-cache: true
     - run: bundle exec rails db:setup
     - run: bundle exec rails test
+    - run: node --test test/javascript/pos_test.mjs
     - run: bundle exec rubocop --enable-pending-cops

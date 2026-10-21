@@ -35,15 +35,6 @@ const handleError = function(a) {
   }
 };
 let id = null;
-const start = function() {
-  if (id) {
-    return;
-  }
-  const new_memo = document.getElementById("new_memo");
-  if (new_memo) {
-    return id = navigator.geolocation.watchPosition(locupdate, handleError);
-  }
-};
 const stop = function() {
   if (!id) {
     return;
@@ -51,7 +42,14 @@ const stop = function() {
   navigator.geolocation.clearWatch(id);
   return id = null;
 };
+// Turbo replaces the body on every visit (links and form submissions alike),
+// so the watch is restarted to give the new form a position at once.
+const start = function() {
+  stop();
+  const new_memo = document.getElementById("new_memo");
+  if (new_memo) {
+    return id = navigator.geolocation.watchPosition(locupdate, handleError);
+  }
+};
 
 document.addEventListener('turbo:load', start);
-document.addEventListener('turbo:click', stop);
-start();
