@@ -45,3 +45,5 @@ updates:
     interval: "daily"
   cooldown:
     default-days: 2
+    exclude:
+    - "ruby/setup-ruby"
