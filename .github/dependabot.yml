@@ -24,6 +24,25 @@ updates:
     update-types: ["version-update:semver-major"]
   allow:
   - dependency-type: all
+  groups:
+    rails:
+      patterns:
+      - "rails"
+      - "railties"
+      - "actioncable"
+      - "actionmailbox"
+      - "actionmailer"
+      - "actionpack"
+      - "actiontext"
+      - "actionview"
+      - "activejob"
+      - "activemodel"
+      - "activerecord"
+      - "activestorage"
+      - "activesupport"
+    kaminari:
+      patterns:
+      - "kaminari*"
 
 - package-ecosystem: "docker"
   directory: "/"
